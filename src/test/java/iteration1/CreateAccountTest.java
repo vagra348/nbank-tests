@@ -1,126 +1,79 @@
 package iteration1;
 
-import io.restassured.RestAssured;
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
-import io.restassured.http.ContentType;
-import org.apache.http.HttpStatus;
+import base.BaseTest;
+import generators.RandomData;
+import io.restassured.response.ValidatableResponse;
+import models.CreateUserRequest;
+import models.UserRole;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import requests.AdminCreateUserRequester;
+import requests.CreateAccountRequester;
+import requests.GetUserAccountsRequester;
+import specs.RequestSpecs;
+import specs.ResponseSpecs;
 
-import java.util.List;
 
-import static io.restassured.RestAssured.given;
+public class CreateAccountTest extends BaseTest {
 
-public class CreateAccountTest {
-    @BeforeAll
-    public static void setupRestAssured() {
-        RestAssured.filters(
-                List.of(new RequestLoggingFilter(),
-                        new ResponseLoggingFilter()));
+    @Tag("POSITIVE")
+    @Test
+    public void authorizedUserCanSeeHisAccounts() {
+        CreateUserRequest createUserRequest = CreateUserRequest.builder()
+                .username(RandomData.qenerateUsername())
+                .password(RandomData.qeneratePassword())
+                .role(String.valueOf(UserRole.USER))
+                .build();
+
+        new AdminCreateUserRequester(
+                RequestSpecs.adminSpec(),
+                ResponseSpecs.entityWasCreated())
+                .post(createUserRequest);
+
+        new CreateAccountRequester(
+                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                ResponseSpecs.entityWasCreated())
+                .post();
+
+        new GetUserAccountsRequester(
+                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                ResponseSpecs.requestReturnsOK())
+                .get()
+                .body(Matchers.containsString("id"))
+                .body(Matchers.containsString("accountNumber"))
+                .body(Matchers.containsString("balance"))
+                .body(Matchers.containsString("transactions"));
     }
 
     @Tag("POSITIVE")
     @Test
     public void authorizedUserCanCreateAccount() {
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .header("Authorization", "Basic YWRtaW46YWRtaW4=")
-                .body(
-                        """
-                                {
-                                  "username": "newCoolUser_1",
-                                  "password": "verysTRongPassword33$",
-                                  "role": "USER"
-                                }
-                                """)
-                .post("http://localhost:4111/api/v1/admin/users")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_CREATED);
-        String authToken = given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(
-                        """
-                                {
-                                  "username": "newCoolUser_1",
-                                  "password": "verysTRongPassword33$"
-                                }
-                                """
-                )
-                .post("http://localhost:4111/api/v1/auth/login")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .extract()
-                .header("Authorization");
-        given()
-                .header("Authorization", authToken)
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .post("http://localhost:4111/api/v1/accounts")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_CREATED);
-    }
+        CreateUserRequest createUserRequest = CreateUserRequest.builder()
+                .username(RandomData.qenerateUsername())
+                .password(RandomData.qeneratePassword())
+                .role(String.valueOf(UserRole.USER))
+                .build();
 
-    @Tag("POSITIVE")
-    @Test
-    public void authorizedUserCanSeeHisAccounts() {
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .header("Authorization", "Basic YWRtaW46YWRtaW4=")
-                .body(
-                        """
-                                {
-                                  "username": "newCoolUser_2",
-                                  "password": "verysTRongPassword33$",
-                                  "role": "USER"
-                                }
-                                """)
-                .post("http://localhost:4111/api/v1/admin/users")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_CREATED);
-        String authToken = given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(
-                        """
-                                {
-                                  "username": "newCoolUser_2",
-                                  "password": "verysTRongPassword33$"
-                                }
-                                """
-                )
-                .post("http://localhost:4111/api/v1/auth/login")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .extract()
-                .header("Authorization");
-        given()
-                .header("Authorization", authToken)
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .post("http://localhost:4111/api/v1/accounts")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_CREATED);
-        given()
-                .header("Authorization", authToken)
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .get("http://localhost:4111/api/v1/customer/accounts")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .body(Matchers.containsString("accountNumber"));
+        new AdminCreateUserRequester(
+                RequestSpecs.adminSpec(),
+                ResponseSpecs.entityWasCreated())
+                .post(createUserRequest);
+
+        Integer accIdValue = new CreateAccountRequester(
+                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                ResponseSpecs.entityWasCreated())
+                .post()
+                .body(Matchers.containsString("id"))
+                .body(Matchers.containsString("accountNumber"))
+                .extract().body().path("id");
+
+        ValidatableResponse response = new GetUserAccountsRequester(
+                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                ResponseSpecs.requestReturnsOK())
+                .get();
+
+        softly.assertThat(response.body("id", Matchers.hasItem(accIdValue)));
     }
 
 }

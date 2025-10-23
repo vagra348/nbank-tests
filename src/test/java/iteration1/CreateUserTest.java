@@ -1,194 +1,159 @@
 package iteration1;
 
-import io.restassured.RestAssured;
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
-import io.restassured.http.ContentType;
-import org.apache.http.HttpStatus;
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.BeforeAll;
+import base.BaseTest;
+import generators.RandomData;
+import models.CreateUserRequest;
+import models.CreateUserResponse;
+import models.ErrorText;
+import models.UserRole;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import requests.AdminCreateUserRequester;
+import specs.RequestSpecs;
+import specs.ResponseSpecs;
 
-import java.util.List;
 import java.util.stream.Stream;
 
-import static io.restassured.RestAssured.given;
-
-public class CreateUserTest {
-    @BeforeAll
-    public static void setupRestAssured() {
-        RestAssured.filters(
-                List.of(new RequestLoggingFilter(),
-                        new ResponseLoggingFilter()));
-    }
+public class CreateUserTest extends BaseTest {
 
     @Tag("POSITIVE")
     @MethodSource("userCorrectData")
     @ParameterizedTest
     public void adminCanCreateUserWithCorrectDataTest(String username, String password, String role) {
-        String requestBody = String.format(
-                """
-                        {
-                              "username": "%s",
-                              "password": "%s",
-                              "role": "%s"
-                        }
-                        """, username, password, role);
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .header("Authorization", "Basic YWRtaW46YWRtaW4=")
-                .body(requestBody)
-                .post("http://localhost:4111/api/v1/admin/users")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_CREATED)
-                .body("username", Matchers.equalTo(username))
-                .body("password", Matchers.not(Matchers.equalTo(password)))
-                .body("role", Matchers.equalTo(role));
+        CreateUserRequest createUserRequest = CreateUserRequest.builder()
+                .username(username)
+                .password(password)
+                .role(role)
+                .build();
+
+        CreateUserResponse createUserResponse = new AdminCreateUserRequester(
+                RequestSpecs.adminSpec(),
+                ResponseSpecs.entityWasCreated())
+                .post(createUserRequest)
+                .extract().as(CreateUserResponse.class);
+
+        softly.assertThat(createUserRequest.getUsername()).isEqualTo(createUserResponse.getUsername());
+        softly.assertThat(createUserRequest.getPassword()).isNotEqualTo(createUserResponse.getPassword());
+        softly.assertThat(createUserRequest.getRole()).isEqualTo(createUserResponse.getRole());
     }
 
     @Tag("NEGATIVE")
     @MethodSource("usernameInvalidData")
     @ParameterizedTest
     public void adminCanNotCreateUserWithInvalidUsername(String username, String password, String role, String errorKey, String errorValue) {
-        String requestBody = String.format(
-                """
-                        {
-                              "username": "%s",
-                              "password": "%s",
-                              "role": "%s"
-                        }
-                        """, username, password, role);
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .header("Authorization", "Basic YWRtaW46YWRtaW4=")
-                .body(requestBody)
-                .post("http://localhost:4111/api/v1/admin/users")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(errorKey, Matchers.hasItem(errorValue));
+        CreateUserRequest createUserRequest = CreateUserRequest.builder()
+                .username(username)
+                .password(password)
+                .role(role)
+                .build();
+
+        new AdminCreateUserRequester(
+                RequestSpecs.adminSpec(),
+                ResponseSpecs.badRequest(errorKey, errorValue))
+                .post(createUserRequest);
     }
 
     @Tag("NEGATIVE")
     @MethodSource("passwordInvalidData")
     @ParameterizedTest
     public void adminCanNotCreateUserWithInvalidPassword(String username, String password, String role, String errorKey, String errorValue) {
-        String requestBody = String.format(
-                """
-                        {
-                              "username": "%s",
-                              "password": "%s",
-                              "role": "%s"
-                        }
-                        """, username, password, role);
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .header("Authorization", "Basic YWRtaW46YWRtaW4=")
-                .body(requestBody)
-                .post("http://localhost:4111/api/v1/admin/users")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(errorKey, Matchers.hasItem(errorValue));
+        CreateUserRequest createUserRequest = CreateUserRequest.builder()
+                .username(username)
+                .password(password)
+                .role(role)
+                .build();
+
+        new AdminCreateUserRequester(
+                RequestSpecs.adminSpec(),
+                ResponseSpecs.badRequest(errorKey, errorValue))
+                .post(createUserRequest);
     }
 
     @Tag("NEGATIVE")
     @MethodSource("roleInvalidData")
     @ParameterizedTest
     public void adminCanNotCreateUserWithInvalidRole(String username, String password, String role, String errorKey, String errorValue) {
-        String requestBody = String.format(
-                """
-                        {
-                              "username": "%s",
-                              "password": "%s",
-                              "role": "%s"
-                        }
-                        """, username, password, role);
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .header("Authorization", "Basic YWRtaW46YWRtaW4=")
-                .body(requestBody)
-                .post("http://localhost:4111/api/v1/admin/users")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(errorKey, Matchers.hasItem(errorValue));
+        CreateUserRequest createUserRequest = CreateUserRequest.builder()
+                .username(username)
+                .password(password)
+                .role(role)
+                .build();
+
+        new AdminCreateUserRequester(
+                RequestSpecs.adminSpec(),
+                ResponseSpecs.badRequest(errorKey, errorValue))
+                .post(createUserRequest);
     }
 
 
     public static Stream<Arguments> userCorrectData() {
         return Stream.of(
-                Arguments.of("A.n-Na_15Symbls", "Test12345$", "USER"),
-                Arguments.of("Ad3", "Test12345$", "ADMIN"),
-                Arguments.of("A.N-na_0", "Pas8Sym$", "USER")
+                Arguments.of(RandomStringUtils.randomAlphanumeric(15), "Test12345$", String.valueOf(UserRole.USER)),
+                Arguments.of(RandomStringUtils.randomAlphanumeric(3), "Test12345$", "ADMIN"),
+                Arguments.of(RandomStringUtils.randomAlphanumeric(8), "Pas8Sym$", String.valueOf(UserRole.USER))
         );
     }
 
     public static Stream<Arguments> usernameInvalidData() {
         return Stream.of(
-                Arguments.of("admin", "Pass9Sym$", "USER", "username", "Username 'admin' already exists"), //здесь нужен отдельный тест, т.к. ошибка не в JSON приходит
-                Arguments.of("", "Test12345$", "USER", "username", "Username cannot be blank"),
-                Arguments.of("   ", "Test12345$", "USER", "username", "Username cannot be blank"),
-                Arguments.of("ab", "Test12345$", "USER", "username", "Username must be between 3 and 15 characters"),
-                Arguments.of("abcdefgh12345678", "Test12345$", "USER", "username", "Username must be between 3 and 15 characters"),
-                Arguments.of("кириллица", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"), //в требования не было, но наверняка подразумевалось - нужно уточнять
-                Arguments.of("ab c", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12$", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12@", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12#", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12%", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12^", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12*", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12&", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12!", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12\"", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12`", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12~", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12<", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12>", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12?", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12/", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12\\", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12|", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12,", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12+", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12:", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12{", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12}", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12[", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12]", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12(", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots"),
-                Arguments.of("ab12)", "Test12345$", "USER", "username", "Username must contain only letters, digits, dashes, underscores, and dots")
+                Arguments.of("admin", "Pass9Sym$", String.valueOf(UserRole.USER), "username", "Username 'admin' already exists"), //здесь нужен отдельный тест, т.к. ошибка не в JSON приходит
+                Arguments.of("", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.blankUsernameError.getTitle()),
+                Arguments.of("   ", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.blankUsernameError.getTitle()),
+                Arguments.of("ab", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameLengthError.getTitle()),
+                Arguments.of("abcdefgh12345678", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameLengthError.getTitle()),
+                Arguments.of("кириллица", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()), //в требования не было, но наверняка подразумевалось - нужно уточнять
+                Arguments.of("ab c", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12$", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12@", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12#", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12%", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12^", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12*", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12&", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12!", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12\"", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12`", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12~", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12<", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12>", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12?", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12/", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12\\", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12|", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12,", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12+", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12:", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12{", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12}", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12[", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12]", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12(", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle()),
+                Arguments.of("ab12)", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameExtraSymbolError.getTitle())
         );
     }
 
     public static Stream<Arguments> passwordInvalidData() {
         return Stream.of(
-                Arguments.of("aaa1", "", "USER", "password", "Password cannot be blank"),
-                Arguments.of("aaa1", "         ", "USER", "password", "Password cannot be blank"),
-                Arguments.of("aaa1", "тестПароль№1", "USER", "password", "Password must contain at least one digit, one lower case, one upper case, one special character, no spaces, and be at least 8 characters long"),
-                Arguments.of("aaa1", "tstPs1$", "USER", "password", "Password must contain at least one digit, one lower case, one upper case, one special character, no spaces, and be at least 8 characters long"),
-                Arguments.of("aaa1", "testPass 123$", "USER", "password", "Password must contain at least one digit, one lower case, one upper case, one special character, no spaces, and be at least 8 characters long"),
-                Arguments.of("aaa1", "testPass123", "USER", "password", "Password must contain at least one digit, one lower case, one upper case, one special character, no spaces, and be at least 8 characters long"),
-                Arguments.of("bbb2", "testpass123$", "USER", "password", "Password must contain at least one digit, one lower case, one upper case, one special character, no spaces, and be at least 8 characters long"),
-                Arguments.of("ccc3", "TESTPASS123$", "USER", "password", "Password must contain at least one digit, one lower case, one upper case, one special character, no spaces, and be at least 8 characters long"),
-                Arguments.of("ddd4", "testPass$", "USER", "password", "Password must contain at least one digit, one lower case, one upper case, one special character, no spaces, and be at least 8 characters long")
+                Arguments.of(RandomData.qenerateUsername(), "", String.valueOf(UserRole.USER), "password", ErrorText.blankPasswordError.getTitle()),
+                Arguments.of(RandomData.qenerateUsername(), "         ", String.valueOf(UserRole.USER), "password", ErrorText.blankPasswordError.getTitle()),
+                Arguments.of(RandomData.qenerateUsername(), "тестПароль№1", String.valueOf(UserRole.USER), "password", ErrorText.passwordValidationError.getTitle()),
+                Arguments.of(RandomData.qenerateUsername(), "tstPs1$", String.valueOf(UserRole.USER), "password", ErrorText.passwordValidationError.getTitle()),
+                Arguments.of(RandomData.qenerateUsername(), "testPass 123$", String.valueOf(UserRole.USER), "password", ErrorText.passwordValidationError.getTitle()),
+                Arguments.of(RandomData.qenerateUsername(), "testPass123", String.valueOf(UserRole.USER), "password", ErrorText.passwordValidationError.getTitle()),
+                Arguments.of(RandomData.qenerateUsername(), "testpass123$", String.valueOf(UserRole.USER), "password", ErrorText.passwordValidationError.getTitle()),
+                Arguments.of(RandomData.qenerateUsername(), "TESTPASS123$", String.valueOf(UserRole.USER), "password", ErrorText.passwordValidationError.getTitle()),
+                Arguments.of(RandomData.qenerateUsername(), "testPass$", String.valueOf(UserRole.USER), "password", ErrorText.passwordValidationError.getTitle())
         );
     }
 
     public static Stream<Arguments> roleInvalidData() {
         return Stream.of(
-                Arguments.of("user1", "Test12345$", "", "role", "Role must be either 'ADMIN' or 'USER'"),
-                Arguments.of("user2", "Test12345$", "User", "role", "Role must be either 'ADMIN' or 'USER'"),
-                Arguments.of("smbdy", "Test12345$", "SMBDY", "role", "Role must be either 'ADMIN' or 'USER'")
+                Arguments.of(RandomData.qenerateUsername(), "Test12345$", "", "role", ErrorText.roleValidationError.getTitle()),
+                Arguments.of(RandomData.qenerateUsername(), "Test12345$", "User", "role", ErrorText.roleValidationError.getTitle()),
+                Arguments.of(RandomData.qenerateUsername(), "Test12345$", "SMBDY", "role", ErrorText.roleValidationError.getTitle())
         );
     }
 
