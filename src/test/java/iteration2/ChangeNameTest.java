@@ -2,11 +2,7 @@ package iteration2;
 
 import base.BaseTest;
 import generators.RandomData;
-import models.ChangeNameRequest;
-import models.CreateUserRequest;
-import models.ErrorText;
-import models.UserRole;
-import org.hamcrest.Matchers;
+import models.*;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -40,24 +36,24 @@ public class ChangeNameTest extends BaseTest {
                 .name(RandomData.qenerateName())
                 .build();
 
-        new ChangeNameRequester(
+        ChangeNameResponse changeNameResponse = new ChangeNameRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.requestReturnsOK())
                 .put(changeNameRequest)
-                .assertThat()
-                .body("customer.name", Matchers.equalTo(changeNameRequest.getName()))
-                .body("message", Matchers.equalTo("Profile updated successfully"));
+                .extract().as(ChangeNameResponse.class);
 
-        new GetUserProfileRequester(
+        softly.assertThat(changeNameResponse.getMessage()).isEqualTo("Profile updated successfully");
+        softly.assertThat(changeNameResponse.getCustomer().getName()).isEqualTo(changeNameRequest.getName());
+
+        ProfileModel profile = new GetUserProfileRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.requestReturnsOK())
-                .get()
-                .assertThat()
-        // Здесь тоже сложная структура json-ответа, пробовала сделать, но придётся смотреть след.видео
-                .body("name", Matchers.equalTo(changeNameRequest.getName()))
-                .body("username", Matchers.equalTo(createUserRequest.getUsername()))
-                .body("password", Matchers.not(Matchers.equalTo(createUserRequest.getPassword())))
-                .body("role", Matchers.equalTo(UserRole.USER.toString()));
+                .get().extract().as(ProfileModel.class);
+
+        softly.assertThat(profile.getUsername()).isEqualTo(createUserRequest.getUsername());
+        softly.assertThat(profile.getName()).isEqualTo(changeNameRequest.getName());
+
+
     }
 
     @Tag("NEGATIVE")
@@ -83,6 +79,15 @@ public class ChangeNameTest extends BaseTest {
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.badRequest(errorValue))
                 .put(changeNameRequest);
+
+        ProfileModel profile = new GetUserProfileRequester(
+                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                ResponseSpecs.requestReturnsOK())
+                .get()
+                .extract().as(ProfileModel.class);
+
+        softly.assertThat(profile.getUsername()).isEqualTo(createUserRequest.getUsername());
+        softly.assertThat(profile.getName()).isEqualTo(null);
     }
 
     public static Stream<Arguments> invalidNameData() {

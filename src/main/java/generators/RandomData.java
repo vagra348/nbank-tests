@@ -2,6 +2,8 @@ package generators;
 
 import org.apache.commons.lang3.RandomStringUtils;
 
+import java.util.random.RandomGenerator;
+
 public class RandomData {
     private RandomData(){}
 
@@ -18,5 +20,9 @@ public class RandomData {
     public static String qenerateName(){
         return RandomStringUtils.randomAlphabetic(5) +
                 " " + RandomStringUtils.randomAlphabetic(5);
+    }
+
+    public static Double generateSum(Double min, Double max){
+        return RandomGenerator.getDefault().nextDouble(min, max);
     }
 }

@@ -2,12 +2,7 @@ package iteration2;
 
 import base.BaseTest;
 import generators.RandomData;
-import io.restassured.response.ValidatableResponse;
-import models.CreateUserRequest;
-import models.ErrorText;
-import models.MakeDepositRequest;
-import models.UserRole;
-import org.hamcrest.Matchers;
+import models.*;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -20,6 +15,7 @@ import requests.MakeDepositRequester;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 public class DepositTest extends BaseTest {
@@ -39,33 +35,31 @@ public class DepositTest extends BaseTest {
                 ResponseSpecs.entityWasCreated())
                 .post(createUserRequest);
 
-        Integer accountId = new CreateAccountRequester(
+        AccountModel newAcc = new CreateAccountRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.entityWasCreated())
-                .post().extract()
-                .path("id");
+                .post().extract().as(AccountModel.class);
 
         MakeDepositRequest makeDepositRequest = MakeDepositRequest.builder()
-                .id(accountId)
+                .id(newAcc.getId())
                 .balance(amount)
                 .build();
 
         new MakeDepositRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.requestReturnsOK())
-                .post(makeDepositRequest)
-                .assertThat()
-                .body("id", Matchers.equalTo(accountId))
-                .body("balance", Matchers.equalTo((float)amount));
+                .post(makeDepositRequest);
 
-
-        ValidatableResponse response = new GetUserAccountsRequester(
+        List<AccountModel> accounts = List.of(new GetUserAccountsRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.requestReturnsOK())
-                .get();
+                .get()
+                .extract().as(AccountModel[].class));
 
-        softly.assertThat(response.body("id", Matchers.hasItem(accountId)));
-        softly.assertThat(response.body("balance", Matchers.hasItem((float)amount)));
+        softly.assertThat(accounts.getFirst().getId()).isEqualTo(newAcc.getId());
+        softly.assertThat(accounts.getFirst().getBalance()).isEqualTo(amount);
+        softly.assertThat(accounts.getFirst().getAccountNumber()).isEqualTo(newAcc.getAccountNumber());
+
     }
 
     @Tag("NEGATIVE")
@@ -83,14 +77,13 @@ public class DepositTest extends BaseTest {
                 ResponseSpecs.entityWasCreated())
                 .post(createUserRequest);
 
-        Integer accountId = new CreateAccountRequester(
+        AccountModel newAcc = new CreateAccountRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.entityWasCreated())
-                .post().extract()
-                .path("id");
+                .post().extract().as(AccountModel.class);
 
         MakeDepositRequest makeDepositRequest = MakeDepositRequest.builder()
-                .id(accountId)
+                .id(newAcc.getId())
                 .balance(amount)
                 .build();
 
@@ -98,6 +91,15 @@ public class DepositTest extends BaseTest {
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.badRequest(errorValue))
                 .post(makeDepositRequest);
+
+        List<AccountModel> accounts = List.of(new GetUserAccountsRequester(
+                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                ResponseSpecs.requestReturnsOK())
+                .get()
+                .extract().as(AccountModel[].class));
+
+        softly.assertThat(accounts.getFirst().getBalance()).isEqualTo(newAcc.getBalance());
+
     }
 
     @Tag("NEGATIVE")
@@ -125,21 +127,28 @@ public class DepositTest extends BaseTest {
                 ResponseSpecs.entityWasCreated())
                 .post(user2Request);
 
-        Integer accountIdUser2 = new CreateAccountRequester(
+        AccountModel accountUser2 = new CreateAccountRequester(
                 RequestSpecs.authUserSpec(user2Request.getUsername(), user2Request.getPassword()),
                 ResponseSpecs.entityWasCreated())
-                .post().extract()
-                .path("id");
+                .post().extract().as(AccountModel.class);
 
         MakeDepositRequest makeDepositRequest = MakeDepositRequest.builder()
-                .id(accountIdUser2)
-                .balance(1000.0)
+                .id(accountUser2.getId())
+                .balance(RandomData.generateSum(0.01, 5000.0))
                 .build();
 
         new MakeDepositRequester(
                 RequestSpecs.authUserSpec(user1Request.getUsername(), user1Request.getPassword()),
                 ResponseSpecs.requestForbidden())
                 .post(makeDepositRequest);
+
+        List<AccountModel> accounts = List.of(new GetUserAccountsRequester(
+                RequestSpecs.authUserSpec(user2Request.getUsername(), user2Request.getPassword()),
+                ResponseSpecs.requestReturnsOK())
+                .get()
+                .extract().as(AccountModel[].class));
+
+        softly.assertThat(accounts.getFirst().getBalance()).isEqualTo(accountUser2.getBalance());
     }
 
     @Tag("NEGATIVE")
@@ -156,29 +165,29 @@ public class DepositTest extends BaseTest {
                 ResponseSpecs.entityWasCreated())
                 .post(createUserRequest);
 
-        Integer realAccountId = new CreateAccountRequester(
+        AccountModel newAcc = new CreateAccountRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.entityWasCreated())
-                .post().extract()
-                .path("id");
+                .post().extract().as(AccountModel.class);
 
-        Integer nonExistentAccountId = realAccountId + 1000;
+        Integer nonExistentAccountId = newAcc.getId() + 1000;
 
         MakeDepositRequest makeDepositRequest = MakeDepositRequest.builder()
                 .id(nonExistentAccountId)
-                .balance(1000.0)
+                .balance(RandomData.generateSum(0.01, 5000.0))
                 .build();
 
         new MakeDepositRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.requestForbidden())
                 .post(makeDepositRequest);
+
     }
 
     public static Stream<Arguments> validDepositAmounts() {
         return Stream.of(
-                Arguments.of(1.0),
-                Arguments.of(1.1),
+                Arguments.of(0.01),
+                Arguments.of(0.02),
                 Arguments.of(4999.9),
                 Arguments.of(5000.0)
         );

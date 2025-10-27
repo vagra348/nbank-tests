@@ -3,7 +3,6 @@ package iteration2;
 import base.BaseTest;
 import generators.RandomData;
 import models.*;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -13,6 +12,7 @@ import requests.*;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 public class TransferTest extends BaseTest {
@@ -31,21 +31,21 @@ public class TransferTest extends BaseTest {
                 ResponseSpecs.entityWasCreated())
                 .post(createUserRequest);
 
-        Integer senderAccountId = new CreateAccountRequester(
+        AccountModel senderAccount = new CreateAccountRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.entityWasCreated())
                 .post().extract()
-                .path("id");
+                .as(AccountModel.class);
 
-        Integer receiverAccountId = new CreateAccountRequester(
+        AccountModel receiverAccount = new CreateAccountRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.entityWasCreated())
                 .post().extract()
-                .path("id");
+                .as(AccountModel.class);
 
         MakeDepositRequest makeDepositRequest = MakeDepositRequest.builder()
-                .id(senderAccountId)
-                .balance(2000.0)
+                .id(senderAccount.getId())
+                .balance(RandomData.generateSum(2000.0, 5000.0))
                 .build();
 
         new MakeDepositRequester(
@@ -54,9 +54,9 @@ public class TransferTest extends BaseTest {
                 .post(makeDepositRequest);
 
         TransferRequest transferRequest = TransferRequest.builder()
-                .senderAccountId(senderAccountId)
-                .receiverAccountId(receiverAccountId)
-                .amount(999.0)
+                .senderAccountId(senderAccount.getId())
+                .receiverAccountId(receiverAccount.getId())
+                .amount(RandomData.generateSum(1.0, 1999.0))
                 .build();
 
         TransferResponse transferResponse = new TransferRequester(
@@ -65,73 +65,130 @@ public class TransferTest extends BaseTest {
                 .post(transferRequest)
                 .extract().as(TransferResponse.class);
 
-        new GetTransactionsRequester(
+        softly.assertThat(transferResponse.getMessage()).isEqualTo("Transfer successful");
+        softly.assertThat(transferResponse.getReceiverAccountId()).isEqualTo(receiverAccount.getId());
+        softly.assertThat(transferResponse.getSenderAccountId()).isEqualTo(senderAccount.getId());
+        softly.assertThat(transferResponse.getAmount()).isEqualTo(transferRequest.getAmount());
+
+
+        List<TransactionModel> transactionsSenderAcc = List.of(new GetTransactionsRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.requestReturnsOK())
-                .get(senderAccountId)
-                // и здесь тоже сложные json-ы для сравнения
-                .body(Matchers.containsString("TRANSFER_OUT"));
+                .get(senderAccount.getId())
+                .extract().as(TransactionModel[].class));
 
-        softly.assertThat(transferResponse.getMessage()).isEqualTo("Transfer successful");
-        softly.assertThat(transferResponse.getReceiverAccountId()).isEqualTo(receiverAccountId);
-        softly.assertThat(transferResponse.getSenderAccountId()).isEqualTo(senderAccountId);
-        softly.assertThat(transferResponse.getAmount()).isEqualTo((float) 999.0);
+        TransactionModel targetOutTransaction = transactionsSenderAcc.stream()
+                .filter(transaction -> transaction.getRelatedAccountId().equals(receiverAccount.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Transaction with id " + receiverAccount.getId() + " not found"));
+
+        List<TransactionModel> transactionsReceiverAcc = List.of(new GetTransactionsRequester(
+                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                ResponseSpecs.requestReturnsOK())
+                .get(receiverAccount.getId())
+                .extract().as(TransactionModel[].class));
+
+        TransactionModel targetInTransaction = transactionsReceiverAcc.stream()
+                .filter(transaction -> transaction.getRelatedAccountId().equals(senderAccount.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Transaction with id " + senderAccount.getId() + " not found"));
+
+        softly.assertThat(targetInTransaction.getAmount()).isEqualTo(transferRequest.getAmount());
+        softly.assertThat(targetOutTransaction.getAmount()).isEqualTo(transferRequest.getAmount());
+
+        softly.assertThat(targetInTransaction.getType()).isEqualTo("TRANSFER_IN");
+        softly.assertThat(targetOutTransaction.getType()).isEqualTo("TRANSFER_OUT");
+
+        List<AccountModel> accounts = List.of(new GetUserAccountsRequester(
+                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                ResponseSpecs.requestReturnsOK())
+                .get()
+                .extract().as(AccountModel[].class));
+
+        AccountModel changedSenderAcc = accounts.stream()
+                .filter(acc -> acc.getId().equals(senderAccount.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Account with id " + senderAccount.getId() + " not found"));
+
+        AccountModel changedReceiverAcc = accounts.stream()
+                .filter(acc -> acc.getId().equals(receiverAccount.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Account with id " + receiverAccount.getId() + " not found"));
+
+
+        softly.assertThat(changedSenderAcc.getBalance()).isEqualTo(makeDepositRequest.getBalance()-transferRequest.getAmount());
+        softly.assertThat(changedReceiverAcc.getBalance()).isEqualTo(transferRequest.getAmount());
+
     }
-@Tag("POSITIVE")
-@Test
-public void authorizedUserCanSeeTransactionsTest() {
-    CreateUserRequest createUserRequest = CreateUserRequest.builder()
-            .username(RandomData.qenerateUsername())
-            .password(RandomData.qeneratePassword())
-            .role(String.valueOf(UserRole.USER))
-            .build();
 
-    new AdminCreateUserRequester(
-            RequestSpecs.adminSpec(),
-            ResponseSpecs.entityWasCreated())
-            .post(createUserRequest);
+    @Tag("POSITIVE")
+    @Test
+    public void authorizedUserCanSeeTransactionsTest() {
+        CreateUserRequest createUserRequest = CreateUserRequest.builder()
+                .username(RandomData.qenerateUsername())
+                .password(RandomData.qeneratePassword())
+                .role(String.valueOf(UserRole.USER))
+                .build();
 
-    Integer senderAccountId = new CreateAccountRequester(
-            RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
-            ResponseSpecs.entityWasCreated())
-            .post().extract()
-            .path("id");
+        new AdminCreateUserRequester(
+                RequestSpecs.adminSpec(),
+                ResponseSpecs.entityWasCreated())
+                .post(createUserRequest);
 
-    Integer receiverAccountId = new CreateAccountRequester(
-            RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
-            ResponseSpecs.entityWasCreated())
-            .post().extract()
-            .path("id");
+        AccountModel senderAccount = new CreateAccountRequester(
+                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                ResponseSpecs.entityWasCreated())
+                .post().extract().as(AccountModel.class);
 
-    MakeDepositRequest makeDepositRequest = MakeDepositRequest.builder()
-            .id(senderAccountId)
-            .balance(2000.0)
-            .build();
+        AccountModel receiverAccount = new CreateAccountRequester(
+                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                ResponseSpecs.entityWasCreated())
+                .post().extract().as(AccountModel.class);
 
-    new MakeDepositRequester(
-            RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
-            ResponseSpecs.requestReturnsOK())
-            .post(makeDepositRequest);
+        MakeDepositRequest makeDepositRequest = MakeDepositRequest.builder()
+                .id(senderAccount.getId())
+                .balance(RandomData.generateSum(2000.0, 5000.0))
+                .build();
 
-    TransferRequest transferRequest = TransferRequest.builder()
-            .senderAccountId(senderAccountId)
-            .receiverAccountId(receiverAccountId)
-            .amount(999.0)
-            .build();
+        new MakeDepositRequester(
+                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                ResponseSpecs.requestReturnsOK())
+                .post(makeDepositRequest);
 
-    new TransferRequester(
-            RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
-            ResponseSpecs.requestReturnsOK())
-            .post(transferRequest);
+        TransferRequest transferRequest = TransferRequest.builder()
+                .senderAccountId(senderAccount.getId())
+                .receiverAccountId(receiverAccount.getId())
+                .amount(RandomData.generateSum(1.0, 1999.0))
+                .build();
 
-    new GetTransactionsRequester(
-            RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
-            ResponseSpecs.requestReturnsOK())
-            .get(senderAccountId)
-            .assertThat()
-            .body(Matchers.containsString("DEPOSIT"))
-            .body(Matchers.containsString("TRANSFER_OUT"));
-}
+        new TransferRequester(
+                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                ResponseSpecs.requestReturnsOK())
+                .post(transferRequest);
+
+        List<TransactionModel> transactions = List.of(new GetTransactionsRequester(
+                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                ResponseSpecs.requestReturnsOK())
+                .get(senderAccount.getId())
+                .extract().as(TransactionModel[].class));
+
+        TransactionModel targetDepositTransaction = transactions.stream()
+                .filter(transaction -> transaction.getRelatedAccountId().equals(senderAccount.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Transaction with id " + senderAccount.getId() + " not found"));
+
+        TransactionModel targetOutTransaction = transactions.stream()
+                .filter(transaction -> transaction.getRelatedAccountId().equals(receiverAccount.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Transaction with id " + receiverAccount.getId() + " not found"));
+
+        softly.assertThat(targetDepositTransaction.getAmount()).isEqualTo(makeDepositRequest.getBalance());
+        softly.assertThat(targetOutTransaction.getAmount()).isEqualTo(transferRequest.getAmount());
+
+        softly.assertThat(targetDepositTransaction.getType()).isEqualTo("DEPOSIT");
+        softly.assertThat(targetOutTransaction.getType()).isEqualTo("TRANSFER_OUT");
+
+    }
 
     @Tag("POSITIVE")
     @Test
@@ -158,21 +215,21 @@ public void authorizedUserCanSeeTransactionsTest() {
                 ResponseSpecs.entityWasCreated())
                 .post(user2Request);
 
-        Integer senderAccountId = new CreateAccountRequester(
+        AccountModel senderAccount = new CreateAccountRequester(
                 RequestSpecs.authUserSpec(user1Request.getUsername(), user1Request.getPassword()),
                 ResponseSpecs.entityWasCreated())
                 .post().extract()
-                .path("id");
+                .as(AccountModel.class);
 
-        Integer receiverAccountId = new CreateAccountRequester(
+        AccountModel receiverAccount = new CreateAccountRequester(
                 RequestSpecs.authUserSpec(user2Request.getUsername(), user2Request.getPassword()),
                 ResponseSpecs.entityWasCreated())
                 .post().extract()
-                .path("id");
+                .as(AccountModel.class);
 
         MakeDepositRequest makeDepositRequest = MakeDepositRequest.builder()
-                .id(senderAccountId)
-                .balance(2000.0)
+                .id(senderAccount.getId())
+                .balance(RandomData.generateSum(2000.0, 5000.0))
                 .build();
 
         new MakeDepositRequester(
@@ -181,9 +238,9 @@ public void authorizedUserCanSeeTransactionsTest() {
                 .post(makeDepositRequest);
 
         TransferRequest transferRequest = TransferRequest.builder()
-                .senderAccountId(senderAccountId)
-                .receiverAccountId(receiverAccountId)
-                .amount(999.0)
+                .senderAccountId(senderAccount.getId())
+                .receiverAccountId(receiverAccount.getId())
+                .amount(RandomData.generateSum(1.0, 1999.0))
                 .build();
 
         TransferResponse transferResponse = new TransferRequester(
@@ -192,17 +249,64 @@ public void authorizedUserCanSeeTransactionsTest() {
                 .post(transferRequest)
                 .extract().as(TransferResponse.class);
 
-        new GetTransactionsRequester(
+        softly.assertThat(transferResponse.getMessage()).isEqualTo("Transfer successful");
+        softly.assertThat(transferResponse.getReceiverAccountId()).isEqualTo(receiverAccount.getId());
+        softly.assertThat(transferResponse.getSenderAccountId()).isEqualTo(senderAccount.getId());
+        softly.assertThat(transferResponse.getAmount()).isEqualTo(transferRequest.getAmount());
+
+        List<TransactionModel> transactionsSenderAcc = List.of(new GetTransactionsRequester(
                 RequestSpecs.authUserSpec(user1Request.getUsername(), user1Request.getPassword()),
                 ResponseSpecs.requestReturnsOK())
-                .get(senderAccountId)
-                // и здесь тоже сложные json-ы для сравнения
-                .body(Matchers.containsString("TRANSFER_OUT"));
+                .get(senderAccount.getId())
+                .extract().as(TransactionModel[].class));
 
-        softly.assertThat(transferResponse.getMessage()).isEqualTo("Transfer successful");
-        softly.assertThat(transferResponse.getReceiverAccountId()).isEqualTo(receiverAccountId);
-        softly.assertThat(transferResponse.getSenderAccountId()).isEqualTo(senderAccountId);
-        softly.assertThat(transferResponse.getAmount()).isEqualTo((float) 999.0);
+        TransactionModel targetOutTransaction = transactionsSenderAcc.stream()
+                .filter(transaction -> transaction.getRelatedAccountId().equals(receiverAccount.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Transaction with id " + receiverAccount.getId() + " not found"));
+
+        List<TransactionModel> transactionsReceiverAcc = List.of(new GetTransactionsRequester(
+                RequestSpecs.authUserSpec(user2Request.getUsername(), user2Request.getPassword()),
+                ResponseSpecs.requestReturnsOK())
+                .get(receiverAccount.getId())
+                .extract().as(TransactionModel[].class));
+
+        TransactionModel targetInTransaction = transactionsReceiverAcc.stream()
+                .filter(transaction -> transaction.getRelatedAccountId().equals(senderAccount.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Transaction with id " + senderAccount.getId() + " not found"));
+
+        softly.assertThat(targetInTransaction.getAmount()).isEqualTo(transferRequest.getAmount());
+        softly.assertThat(targetOutTransaction.getAmount()).isEqualTo(transferRequest.getAmount());
+
+        softly.assertThat(targetInTransaction.getType()).isEqualTo("TRANSFER_IN");
+        softly.assertThat(targetOutTransaction.getType()).isEqualTo("TRANSFER_OUT");
+
+        List<AccountModel> accountsUser1 = List.of(new GetUserAccountsRequester(
+                RequestSpecs.authUserSpec(user1Request.getUsername(), user1Request.getPassword()),
+                ResponseSpecs.requestReturnsOK())
+                .get()
+                .extract().as(AccountModel[].class));
+
+        AccountModel changedSenderAcc = accountsUser1.stream()
+                .filter(acc -> acc.getId().equals(senderAccount.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Account with id " + senderAccount.getId() + " not found"));
+
+        List<AccountModel> accountsUser2 = List.of(new GetUserAccountsRequester(
+                RequestSpecs.authUserSpec(user2Request.getUsername(), user2Request.getPassword()),
+                ResponseSpecs.requestReturnsOK())
+                .get()
+                .extract().as(AccountModel[].class));
+
+        AccountModel changedReceiverAcc = accountsUser2.stream()
+                .filter(acc -> acc.getId().equals(receiverAccount.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Account with id " + receiverAccount.getId() + " not found"));
+
+
+        softly.assertThat(changedSenderAcc.getBalance()).isEqualTo(makeDepositRequest.getBalance() - transferRequest.getAmount());
+        softly.assertThat(changedReceiverAcc.getBalance()).isEqualTo(transferRequest.getAmount());
 
     }
 
@@ -220,21 +324,21 @@ public void authorizedUserCanSeeTransactionsTest() {
                 ResponseSpecs.entityWasCreated())
                 .post(createUserRequest);
 
-        Integer senderAccountId = new CreateAccountRequester(
+        AccountModel senderAccount = new CreateAccountRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.entityWasCreated())
                 .post().extract()
-                .path("id");
+                .as(AccountModel.class);
 
-        Integer receiverAccountId = new CreateAccountRequester(
+        AccountModel receiverAccount = new CreateAccountRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.entityWasCreated())
                 .post().extract()
-                .path("id");
+                .as(AccountModel.class);
 
         MakeDepositRequest makeDepositRequest = MakeDepositRequest.builder()
-                .id(senderAccountId)
-                .balance(500.0)
+                .id(senderAccount.getId())
+                .balance(RandomData.generateSum(1.0, 500.0))
                 .build();
 
         new MakeDepositRequester(
@@ -243,21 +347,40 @@ public void authorizedUserCanSeeTransactionsTest() {
                 .post(makeDepositRequest);
 
         TransferRequest transferRequest = TransferRequest.builder()
-                .senderAccountId(senderAccountId)
-                .receiverAccountId(receiverAccountId)
-                .amount(1000.0)
+                .senderAccountId(senderAccount.getId())
+                .receiverAccountId(receiverAccount.getId())
+                .amount(RandomData.generateSum(1000.0, 5000.0))
                 .build();
 
         new TransferRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.badRequest(ErrorText.invalidTransferError.getTitle()))
                 .post(transferRequest);
+
+        List<AccountModel> accounts = List.of(new GetUserAccountsRequester(
+                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                ResponseSpecs.requestReturnsOK())
+                .get()
+                .extract().as(AccountModel[].class));
+
+        AccountModel changedSenderAcc = accounts.stream()
+                .filter(acc -> acc.getId().equals(senderAccount.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Account with id " + senderAccount.getId() + " not found"));
+
+        AccountModel changedReceiverAcc = accounts.stream()
+                .filter(acc -> acc.getId().equals(receiverAccount.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Account with id " + receiverAccount.getId() + " not found"));
+
+        softly.assertThat(changedSenderAcc.getBalance()).isEqualTo(makeDepositRequest.getBalance());
+        softly.assertThat(changedReceiverAcc.getBalance()).isEqualTo(0.0);
     }
 
     @Tag("POSITIVE")
     @MethodSource("validTransferAmounts")
     @ParameterizedTest
-    public void authorizedUserCanTransferWithValidAmountsTest(double amount) {
+    public void authorizedUserCanTransferWithValidAmountsTest(double depositAmount, double transferAmount) {
         CreateUserRequest createUserRequest = CreateUserRequest.builder()
                 .username(RandomData.qenerateUsername())
                 .password(RandomData.qeneratePassword())
@@ -269,21 +392,21 @@ public void authorizedUserCanSeeTransactionsTest() {
                 ResponseSpecs.entityWasCreated())
                 .post(createUserRequest);
 
-        Integer senderAccountId = new CreateAccountRequester(
+        AccountModel senderAccount = new CreateAccountRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.entityWasCreated())
                 .post().extract()
-                .path("id");
+                .as(AccountModel.class);
 
-        Integer receiverAccountId = new CreateAccountRequester(
+        AccountModel receiverAccount = new CreateAccountRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.entityWasCreated())
                 .post().extract()
-                .path("id");
+                .as(AccountModel.class);
 
         MakeDepositRequest makeDepositRequest = MakeDepositRequest.builder()
-                .id(senderAccountId)
-                .balance(amount)
+                .id(senderAccount.getId())
+                .balance(depositAmount)
                 .build();
 
         new MakeDepositRequester(
@@ -291,29 +414,42 @@ public void authorizedUserCanSeeTransactionsTest() {
                 ResponseSpecs.requestReturnsOK())
                 .post(makeDepositRequest);
 
+        new MakeDepositRequester(
+                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                ResponseSpecs.requestReturnsOK())
+                .post(makeDepositRequest);
+
         TransferRequest transferRequest = TransferRequest.builder()
-                .senderAccountId(senderAccountId)
-                .receiverAccountId(receiverAccountId)
-                .amount(amount)
+                .senderAccountId(senderAccount.getId())
+                .receiverAccountId(receiverAccount.getId())
+                .amount(transferAmount)
                 .build();
 
-        TransferResponse transferResponse = new TransferRequester(
+        new TransferRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.requestReturnsOK())
                 .post(transferRequest)
                 .extract().as(TransferResponse.class);
 
-        new GetTransactionsRequester(
+        List<AccountModel> accounts = List.of(new GetUserAccountsRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.requestReturnsOK())
-                .get(senderAccountId)
-                // и здесь тоже сложные json-ы для сравнения
-                .body(Matchers.containsString("TRANSFER_OUT"));
+                .get()
+                .extract().as(AccountModel[].class));
 
-        softly.assertThat(transferResponse.getMessage()).isEqualTo("Transfer successful");
-        softly.assertThat(transferResponse.getReceiverAccountId()).isEqualTo(receiverAccountId);
-        softly.assertThat(transferResponse.getSenderAccountId()).isEqualTo(senderAccountId);
-        softly.assertThat(transferResponse.getAmount()).isEqualTo(amount);
+        AccountModel changedSenderAcc = accounts.stream()
+                .filter(acc -> acc.getId().equals(senderAccount.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Account with id " + senderAccount.getId() + " not found"));
+
+        AccountModel changedReceiverAcc = accounts.stream()
+                .filter(acc -> acc.getId().equals(receiverAccount.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Account with id " + receiverAccount.getId() + " not found"));
+
+
+        softly.assertThat(changedSenderAcc.getBalance()).isEqualTo(makeDepositRequest.getBalance()*2 - transferRequest.getAmount());
+        softly.assertThat(changedReceiverAcc.getBalance()).isEqualTo(transferRequest.getAmount());
     }
 
     @Tag("NEGATIVE")
@@ -331,21 +467,21 @@ public void authorizedUserCanSeeTransactionsTest() {
                 ResponseSpecs.entityWasCreated())
                 .post(createUserRequest);
 
-        Integer senderAccountId = new CreateAccountRequester(
+        AccountModel senderAccount = new CreateAccountRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.entityWasCreated())
                 .post().extract()
-                .path("id");
+                .as(AccountModel.class);
 
-        Integer receiverAccountId = new CreateAccountRequester(
+        AccountModel receiverAccount = new CreateAccountRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.entityWasCreated())
                 .post().extract()
-                .path("id");
+                .as(AccountModel.class);
 
         MakeDepositRequest makeDepositRequest = MakeDepositRequest.builder()
-                .id(senderAccountId)
-                .balance(500.0)
+                .id(senderAccount.getId())
+                .balance(RandomData.generateSum(0.01, 5000.0))
                 .build();
 
         new MakeDepositRequester(
@@ -354,8 +490,8 @@ public void authorizedUserCanSeeTransactionsTest() {
                 .post(makeDepositRequest);
 
         TransferRequest transferRequest = TransferRequest.builder()
-                .senderAccountId(senderAccountId)
-                .receiverAccountId(receiverAccountId)
+                .senderAccountId(senderAccount.getId())
+                .receiverAccountId(receiverAccount.getId())
                 .amount(amount)
                 .build();
 
@@ -363,14 +499,34 @@ public void authorizedUserCanSeeTransactionsTest() {
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 ResponseSpecs.badRequest(errorValue))
                 .post(transferRequest);
+
+        List<AccountModel> accounts = List.of(new GetUserAccountsRequester(
+                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                ResponseSpecs.requestReturnsOK())
+                .get()
+                .extract().as(AccountModel[].class));
+
+        AccountModel changedSenderAcc = accounts.stream()
+                .filter(acc -> acc.getId().equals(senderAccount.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Account with id " + senderAccount.getId() + " not found"));
+
+        AccountModel changedReceiverAcc = accounts.stream()
+                .filter(acc -> acc.getId().equals(receiverAccount.getId()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Account with id " + receiverAccount.getId() + " not found"));
+
+        softly.assertThat(changedSenderAcc.getBalance()).isEqualTo(makeDepositRequest.getBalance());
+        softly.assertThat(changedReceiverAcc.getBalance()).isEqualTo(0.0);
+
     }
 
     public static Stream<Arguments> validTransferAmounts() {
         return Stream.of(
-                Arguments.of(1.0),
-                Arguments.of(1.1),
-                Arguments.of(4999.9),
-                Arguments.of(5000.0)
+                Arguments.of(0.01, 0.01),
+                Arguments.of(0.02, 0.02),
+                Arguments.of(5000.0, 9999.9),
+                Arguments.of(5000.0, 10000.0)
         );
     }
 
