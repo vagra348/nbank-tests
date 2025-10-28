@@ -1,155 +1,113 @@
 package iteration1;
 
-import io.restassured.RestAssured;
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
-import io.restassured.http.ContentType;
-import org.apache.http.HttpStatus;
+import base.BaseTest;
+import generators.RandomData;
+import models.*;
 import org.hamcrest.Matchers;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import requests.AdminCreateUserRequester;
+import requests.AdminGetUsersListRequester;
+import requests.LoginUserRequester;
+import specs.RequestSpecs;
+import specs.ResponseSpecs;
 
-import java.util.List;
-
-import static io.restassured.RestAssured.given;
-
-public class LoginUserTest {
-    @BeforeAll
-    public static void setupRestAssured() {
-        RestAssured.filters(
-                List.of(new RequestLoggingFilter(),
-                        new ResponseLoggingFilter()));
-    }
+public class LoginUserTest extends BaseTest {
 
     @Test
     @Tag("POSITIVE")
     public void adminCanGenerateAuthTokenTest() {
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(
-                        """
-                                {
-                                  "username": "admin",
-                                  "password": "admin"
-                                }
-                                """
-                )
-                .post("http://localhost:4111/api/v1/auth/login")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
+        LoginUserRequest loginUserRequest = LoginUserRequest.builder()
+                .username("admin")
+                .password("admin")
+                .build();
+
+        new LoginUserRequester(
+                RequestSpecs.unauthSpec(),
+                ResponseSpecs.requestReturnsOK())
+                .post(loginUserRequest)
                 .header("Authorization", "Basic YWRtaW46YWRtaW4=");
     }
 
     @Test
     @Tag("POSITIVE")
     public void userCanGenerateAuthTokenTest() {
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .header("Authorization", "Basic YWRtaW46YWRtaW4=")
-                .body(
-                        """
-                                {
-                                  "username": "newCoolUser",
-                                  "password": "verysTRongPassword33$",
-                                  "role": "USER"
-                                }
-                                """)
-                .post("http://localhost:4111/api/v1/admin/users")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_CREATED);
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(
-                        """
-                                {
-                                  "username": "newCoolUser",
-                                  "password": "verysTRongPassword33$"
-                                }
-                                """
-                )
-                .post("http://localhost:4111/api/v1/auth/login")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .header("Authorization", Matchers.notNullValue());
+        CreateUserRequest createUserRequest = CreateUserRequest.builder()
+                .username(RandomData.qenerateUsername())
+                .password(RandomData.qeneratePassword())
+                .role(String.valueOf(UserRole.USER))
+                .build();
+
+        new AdminCreateUserRequester(
+                RequestSpecs.adminSpec(),
+                ResponseSpecs.entityWasCreated())
+                .post(createUserRequest);
+
+        LoginUserRequest loginUserRequest = LoginUserRequest.builder()
+                .username(createUserRequest.getUsername())
+                .password(createUserRequest.getPassword())
+                .build();
+
+        LoginUserResponse loginUserResponse = new LoginUserRequester(
+                RequestSpecs.unauthSpec(),
+                ResponseSpecs.requestReturnsOK())
+                .post(loginUserRequest)
+                .header("Authorization", Matchers.notNullValue())
+                .extract().as(LoginUserResponse.class);
+
+
+        softly.assertThat(loginUserRequest.getUsername()).isEqualTo(loginUserResponse.getUsername());
+        softly.assertThat(createUserRequest.getRole()).isEqualTo(loginUserResponse.getRole());
     }
 
     @Test
     @Tag("POSITIVE")
     public void authorizedAdminCanSeeUsersListTest() {
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .header("Authorization", "Basic YWRtaW46YWRtaW4=")
-                .body(
-                        """
-                                {
-                                  "username": "newCoolUser2",
-                                  "password": "verysTRongPassword33$",
-                                  "role": "USER"
-                                }
-                                """)
-                .post("http://localhost:4111/api/v1/admin/users")
-                .then()
+        CreateUserRequest createUserRequest = CreateUserRequest.builder()
+                .username(RandomData.qenerateUsername())
+                .password(RandomData.qeneratePassword())
+                .role(String.valueOf(UserRole.USER))
+                .build();
+
+        new AdminCreateUserRequester(
+                RequestSpecs.adminSpec(),
+                ResponseSpecs.entityWasCreated())
+                .post(createUserRequest);
+
+        new AdminGetUsersListRequester(
+                RequestSpecs.adminSpec(),
+                ResponseSpecs.requestReturnsOK())
+                .get()
                 .assertThat()
-                .statusCode(HttpStatus.SC_CREATED);
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .header("Authorization", "Basic YWRtaW46YWRtaW4=")
-                .get("http://localhost:4111/api/v1/admin/users")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .body(Matchers.containsString("newCoolUser2"));
+                .body(Matchers.containsString(createUserRequest.getUsername()));
     }
 
     @Test
     @Tag("NEGATIVE")
     public void nonExistLoginTest() {
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(
-                        """
-                                {
-                                  "username": "userThatDoesNotExist",
-                                  "password": "admin"
-                                }
-                                """
-                )
-                .post("http://localhost:4111/api/v1/auth/login")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_UNAUTHORIZED)
-                .body("error", Matchers.equalTo("Invalid username or password"));
+        LoginUserRequest loginUserRequest = LoginUserRequest.builder()
+                .username("userThatDoesNotExist")
+                .password("TestPass12345$")
+                .build();
+
+        new LoginUserRequester(
+                RequestSpecs.unauthSpec(),
+                ResponseSpecs.requestUnauthorized())
+                .post(loginUserRequest);
     }
 
     @Test
     @Tag("NEGATIVE")
     public void incorrectPasswordTest() {
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(
-                        """
-                                {
-                                  "username": "admin",
-                                  "password": "adminIncorrectPass"
-                                }
-                                """
-                )
-                .post("http://localhost:4111/api/v1/auth/login")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_UNAUTHORIZED)
-                .body("error", Matchers.equalTo("Invalid username or password"));
+        LoginUserRequest loginUserRequest = LoginUserRequest.builder()
+                .username("admin")
+                .password("adminIncorrectPass")
+                .build();
+
+        new LoginUserRequester(
+                RequestSpecs.unauthSpec(),
+                ResponseSpecs.requestUnauthorized())
+                .post(loginUserRequest);
     }
 
 }

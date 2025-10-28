@@ -1,154 +1,105 @@
 package iteration2;
 
-import io.restassured.RestAssured;
-import io.restassured.filter.log.RequestLoggingFilter;
-import io.restassured.filter.log.ResponseLoggingFilter;
-import io.restassured.http.ContentType;
-import org.apache.http.HttpStatus;
-import org.hamcrest.Matchers;
-import org.junit.jupiter.api.BeforeAll;
+import base.BaseTest;
+import generators.RandomData;
+import models.*;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import requests.AdminCreateUserRequester;
+import requests.ChangeNameRequester;
+import requests.GetUserProfileRequester;
+import specs.RequestSpecs;
+import specs.ResponseSpecs;
 
-import java.util.List;
 import java.util.stream.Stream;
 
-import static io.restassured.RestAssured.given;
-
-public class ChangeNameTest {
-    @BeforeAll
-    public static void setupRestAssured() {
-        RestAssured.filters(
-                List.of(new RequestLoggingFilter(),
-                        new ResponseLoggingFilter()));
-    }
+public class ChangeNameTest extends BaseTest {
 
     @Tag("POSITIVE")
     @Test
     public void authorizedUserCanChangeNameTest() {
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .header("Authorization", "Basic YWRtaW46YWRtaW4=")
-                .body(
-                        """
-                                {
-                                  "username": "usrForNamCh",
-                                  "password": "verysTRongPassword33$",
-                                  "role": "USER"
-                                }
-                           """)
-                .post("http://localhost:4111/api/v1/admin/users")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_CREATED);
+        CreateUserRequest createUserRequest = CreateUserRequest.builder()
+                .username(RandomData.qenerateUsername())
+                .password(RandomData.qeneratePassword())
+                .role(String.valueOf(UserRole.USER))
+                .build();
 
-        String authToken = given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(
-                        """
-                                {
-                                  "username": "usrForNamCh",
-                                  "password": "verysTRongPassword33$"
-                                }
-                           """
-                )
-                .post("http://localhost:4111/api/v1/auth/login")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .extract()
-                .header("Authorization");
+        new AdminCreateUserRequester(
+                RequestSpecs.adminSpec(),
+                ResponseSpecs.entityWasCreated())
+                .post(createUserRequest);
 
-        given()
-                .header("Authorization", authToken)
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(
-                        """
-                                {
-                                  "name": "One Two"
-                                }
-                           """
-                )
-                .put("http://localhost:4111/api/v1/customer/profile")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .body("customer.name", Matchers.equalTo("One Two"))
-                .body("message", Matchers.equalTo("Profile updated successfully"));
+        ChangeNameRequest changeNameRequest = ChangeNameRequest.builder()
+                .name(RandomData.qenerateName())
+                .build();
+
+        ChangeNameResponse changeNameResponse = new ChangeNameRequester(
+                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                ResponseSpecs.requestReturnsOK())
+                .put(changeNameRequest)
+                .extract().as(ChangeNameResponse.class);
+
+        softly.assertThat(changeNameResponse.getMessage()).isEqualTo("Profile updated successfully");
+        softly.assertThat(changeNameResponse.getCustomer().getName()).isEqualTo(changeNameRequest.getName());
+
+        ProfileModel profile = new GetUserProfileRequester(
+                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                ResponseSpecs.requestReturnsOK())
+                .get().extract().as(ProfileModel.class);
+
+        softly.assertThat(profile.getUsername()).isEqualTo(createUserRequest.getUsername());
+        softly.assertThat(profile.getName()).isEqualTo(changeNameRequest.getName());
+
+
     }
 
     @Tag("NEGATIVE")
     @MethodSource("invalidNameData")
     @ParameterizedTest
-    public void authorizedUserCanNotChangeNameWithInvalidDataTest(String username, String name, String errorValue) {
-        String adminCreateUserRequestBody = String.format("""
-                                {
-                                  "username": "%s",
-                                  "password": "verysTRongPassword33$",
-                                  "role": "USER"
-                                }
-                          """, username);
-        given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .header("Authorization", "Basic YWRtaW46YWRtaW4=")
-                .body(adminCreateUserRequestBody)
-                .post("http://localhost:4111/api/v1/admin/users")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_CREATED);
-        String userLoginRequestBody = String.format("""
-                                {
-                                  "username": "%s",
-                                  "password": "verysTRongPassword33$"
-                                }
-                          """, username);
-        String authToken = given()
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(userLoginRequestBody)
-                .post("http://localhost:4111/api/v1/auth/login")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_OK)
-                .extract()
-                .header("Authorization");
+    public void authorizedUserCanNotChangeNameWithInvalidDataTest(String name, String errorValue) {
+        CreateUserRequest createUserRequest = CreateUserRequest.builder()
+                .username(RandomData.qenerateUsername())
+                .password(RandomData.qeneratePassword())
+                .role(String.valueOf(UserRole.USER))
+                .build();
 
-        String requestBody = String.format(
-                """
-                        {
-                          "name": "%s"
-                        }
-                 """, name);
+        new AdminCreateUserRequester(
+                RequestSpecs.adminSpec(),
+                ResponseSpecs.entityWasCreated())
+                .post(createUserRequest);
 
-        given()
-                .header("Authorization", authToken)
-                .contentType(ContentType.JSON)
-                .accept(ContentType.JSON)
-                .body(requestBody)
-                .put("http://localhost:4111/api/v1/customer/profile")
-                .then()
-                .assertThat()
-                .statusCode(HttpStatus.SC_BAD_REQUEST)
-                .body(Matchers.equalTo(errorValue));
+        ChangeNameRequest changeNameRequest = ChangeNameRequest.builder()
+                .name(name)
+                .build();
+
+        new ChangeNameRequester(
+                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                ResponseSpecs.badRequest(errorValue))
+                .put(changeNameRequest);
+
+        ProfileModel profile = new GetUserProfileRequester(
+                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                ResponseSpecs.requestReturnsOK())
+                .get()
+                .extract().as(ProfileModel.class);
+
+        softly.assertThat(profile.getUsername()).isEqualTo(createUserRequest.getUsername());
+        softly.assertThat(profile.getName()).isEqualTo(null);
     }
 
     public static Stream<Arguments> invalidNameData() {
         return Stream.of(
-                Arguments.of("username1", "", "Name must contain two words with letters only"),
-                Arguments.of("username2", "John", "Name must contain two words with letters only"),
-                Arguments.of("username3", "John Smith Third", "Name must contain two words with letters only"),
-                Arguments.of("username4", "John123 Smith", "Name must contain two words with letters only"),
-                Arguments.of("username5", "John Smith!", "Name must contain two words with letters only"),
-                Arguments.of("username6", "John Смит", "Name must contain two words with letters only"),
-                Arguments.of("username7", "John_Smith", "Name must contain two words with letters only"),
-                Arguments.of("username8", "John-Smith", "Name must contain two words with letters only")
+                Arguments.of("", ErrorText.invalidName.getTitle()),
+                Arguments.of("John", ErrorText.invalidName.getTitle()),
+                Arguments.of("John Smith Third", ErrorText.invalidName.getTitle()),
+                Arguments.of("John123 Smith", ErrorText.invalidName.getTitle()),
+                Arguments.of("John Smith!", ErrorText.invalidName.getTitle()),
+                Arguments.of("John Смит", ErrorText.invalidName.getTitle()),
+                Arguments.of("John_Smith", ErrorText.invalidName.getTitle()),
+                Arguments.of("John-Smith", ErrorText.invalidName.getTitle())
         );
     }
 }
