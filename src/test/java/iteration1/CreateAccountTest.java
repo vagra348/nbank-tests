@@ -1,18 +1,22 @@
 package iteration1;
 
 import base.BaseTest;
-import generators.RandomData;
 import io.restassured.response.ValidatableResponse;
+import models.AccountModel;
 import models.CreateUserRequest;
-import models.UserRole;
+import models.ProfileModel;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import requests.AdminCreateUserRequester;
-import requests.CreateAccountRequester;
-import requests.GetUserAccountsRequester;
+import requests.skelethon.Endpoint;
+import requests.skelethon.requesters.CrudRequester;
+import requests.skelethon.requesters.ValidatedCrudRequester;
+import requests.steps.AdminSteps;
+import requests.steps.UserSteps;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
+
+import java.util.List;
 
 
 public class CreateAccountTest extends BaseTest {
@@ -20,60 +24,47 @@ public class CreateAccountTest extends BaseTest {
     @Tag("POSITIVE")
     @Test
     public void authorizedUserCanSeeHisAccounts() {
-        CreateUserRequest createUserRequest = CreateUserRequest.builder()
-                .username(RandomData.qenerateUsername())
-                .password(RandomData.qeneratePassword())
-                .role(String.valueOf(UserRole.USER))
-                .build();
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser();
+        ProfileModel userToDelete = UserSteps.getProfile(createUserRequest);
+        addUserForCleanup(userToDelete);
 
-        new AdminCreateUserRequester(
-                RequestSpecs.adminSpec(),
-                ResponseSpecs.entityWasCreated())
-                .post(createUserRequest);
-
-        new CreateAccountRequester(
+        new CrudRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                Endpoint.ACCOUNTS,
                 ResponseSpecs.entityWasCreated())
-                .post();
+                .post(null);
 
-        new GetUserAccountsRequester(
+        List<AccountModel> accounts = List.of(new CrudRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                Endpoint.GET_USER_ACCOUNTS,
                 ResponseSpecs.requestReturnsOK())
                 .get()
-                .body(Matchers.containsString("id"))
-                .body(Matchers.containsString("accountNumber"))
-                .body(Matchers.containsString("balance"))
-                .body(Matchers.containsString("transactions"));
+                .extract().as(AccountModel[].class));
+        //если ответ десериализуется в json, то это ведь и будет являться проверкой, да?
     }
 
     @Tag("POSITIVE")
     @Test
     public void authorizedUserCanCreateAccount() {
-        CreateUserRequest createUserRequest = CreateUserRequest.builder()
-                .username(RandomData.qenerateUsername())
-                .password(RandomData.qeneratePassword())
-                .role(String.valueOf(UserRole.USER))
-                .build();
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser();
+        ProfileModel userToDelete = UserSteps.getProfile(createUserRequest);
+        addUserForCleanup(userToDelete);
 
-        new AdminCreateUserRequester(
-                RequestSpecs.adminSpec(),
-                ResponseSpecs.entityWasCreated())
-                .post(createUserRequest);
-
-        Integer accIdValue = new CreateAccountRequester(
+        AccountModel account = new ValidatedCrudRequester<AccountModel>(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                Endpoint.ACCOUNTS,
                 ResponseSpecs.entityWasCreated())
-                .post()
-                .body(Matchers.containsString("id"))
-                .body(Matchers.containsString("accountNumber"))
-                .extract().body().path("id");
+                .post(null);
 
-        ValidatableResponse response = new GetUserAccountsRequester(
+
+        ValidatableResponse response = new CrudRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                Endpoint.GET_USER_ACCOUNTS,
                 ResponseSpecs.requestReturnsOK())
                 .get();
 
-        softly.assertThat(response.body("id", Matchers.hasItem(accIdValue)));
+
+        softly.assertThat(response.body("id", Matchers.hasItem(account.getId())));
     }
 
 }

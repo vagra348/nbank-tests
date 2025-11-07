@@ -12,7 +12,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TransactionModel {
+public class TransactionModel extends BaseModel{
     private Integer id;
     private Double amount;
     private String type;

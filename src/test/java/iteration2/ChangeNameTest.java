@@ -1,18 +1,20 @@
 package iteration2;
 
 import base.BaseTest;
-import generators.RandomData;
-import models.*;
+import enums.ErrorText;
+import generators.RandomModelGenerator;
+import models.ChangeNameRequest;
+import models.ChangeNameResponse;
+import models.CreateUserRequest;
+import models.ProfileModel;
+import models.comparison.ModelAssertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import requests.AdminCreateUserRequester;
-import requests.ChangeNameRequester;
-import requests.GetUserProfileRequester;
-import specs.RequestSpecs;
-import specs.ResponseSpecs;
+import requests.steps.AdminSteps;
+import requests.steps.UserSteps;
 
 import java.util.stream.Stream;
 
@@ -21,38 +23,22 @@ public class ChangeNameTest extends BaseTest {
     @Tag("POSITIVE")
     @Test
     public void authorizedUserCanChangeNameTest() {
-        CreateUserRequest createUserRequest = CreateUserRequest.builder()
-                .username(RandomData.qenerateUsername())
-                .password(RandomData.qeneratePassword())
-                .role(String.valueOf(UserRole.USER))
-                .build();
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser();
+        ProfileModel userToDelete = UserSteps.getProfile(createUserRequest);
+        addUserForCleanup(userToDelete);
 
-        new AdminCreateUserRequester(
-                RequestSpecs.adminSpec(),
-                ResponseSpecs.entityWasCreated())
-                .post(createUserRequest);
+        ChangeNameRequest changeNameRequest = RandomModelGenerator.generate(ChangeNameRequest.class);
 
-        ChangeNameRequest changeNameRequest = ChangeNameRequest.builder()
-                .name(RandomData.qenerateName())
-                .build();
-
-        ChangeNameResponse changeNameResponse = new ChangeNameRequester(
-                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
-                ResponseSpecs.requestReturnsOK())
-                .put(changeNameRequest)
-                .extract().as(ChangeNameResponse.class);
+        ChangeNameResponse changeNameResponse = UserSteps.changeName(createUserRequest, changeNameRequest);
 
         softly.assertThat(changeNameResponse.getMessage()).isEqualTo("Profile updated successfully");
-        softly.assertThat(changeNameResponse.getCustomer().getName()).isEqualTo(changeNameRequest.getName());
 
-        ProfileModel profile = new GetUserProfileRequester(
-                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
-                ResponseSpecs.requestReturnsOK())
-                .get().extract().as(ProfileModel.class);
+        ModelAssertions.assertThatModel(changeNameResponse.getCustomer(), changeNameRequest).match();
 
-        softly.assertThat(profile.getUsername()).isEqualTo(createUserRequest.getUsername());
-        softly.assertThat(profile.getName()).isEqualTo(changeNameRequest.getName());
+        ProfileModel profile = UserSteps.getProfile(createUserRequest);
 
+        ModelAssertions.assertThatModel(createUserRequest, profile).match();
+        ModelAssertions.assertThatModel(profile, changeNameRequest).match();
 
     }
 
@@ -60,33 +46,17 @@ public class ChangeNameTest extends BaseTest {
     @MethodSource("invalidNameData")
     @ParameterizedTest
     public void authorizedUserCanNotChangeNameWithInvalidDataTest(String name, String errorValue) {
-        CreateUserRequest createUserRequest = CreateUserRequest.builder()
-                .username(RandomData.qenerateUsername())
-                .password(RandomData.qeneratePassword())
-                .role(String.valueOf(UserRole.USER))
-                .build();
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser();
+        ProfileModel userToDelete = UserSteps.getProfile(createUserRequest);
+        addUserForCleanup(userToDelete);
 
-        new AdminCreateUserRequester(
-                RequestSpecs.adminSpec(),
-                ResponseSpecs.entityWasCreated())
-                .post(createUserRequest);
+        ChangeNameRequest changeNameRequest = ChangeNameRequest.builder().name(name).build();
 
-        ChangeNameRequest changeNameRequest = ChangeNameRequest.builder()
-                .name(name)
-                .build();
+        UserSteps.changeNameBadReq(createUserRequest, changeNameRequest, errorValue);
 
-        new ChangeNameRequester(
-                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
-                ResponseSpecs.badRequest(errorValue))
-                .put(changeNameRequest);
+        ProfileModel profile = UserSteps.getProfile(createUserRequest);
 
-        ProfileModel profile = new GetUserProfileRequester(
-                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
-                ResponseSpecs.requestReturnsOK())
-                .get()
-                .extract().as(ProfileModel.class);
-
-        softly.assertThat(profile.getUsername()).isEqualTo(createUserRequest.getUsername());
+        ModelAssertions.assertThatModel(createUserRequest, profile).match();
         softly.assertThat(profile.getName()).isEqualTo(null);
     }
 

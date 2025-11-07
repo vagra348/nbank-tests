@@ -1,8 +1,8 @@
 package specs;
 
+import enums.ErrorText;
 import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.specification.ResponseSpecification;
-import models.ErrorText;
 import org.apache.http.HttpStatus;
 import org.hamcrest.Matchers;
 

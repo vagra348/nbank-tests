@@ -1,19 +1,21 @@
 package iteration2;
 
 import base.BaseTest;
+import enums.ErrorText;
 import generators.RandomData;
-import models.*;
+import generators.RandomModelGenerator;
+import models.AccountModel;
+import models.CreateUserRequest;
+import models.MakeDepositRequest;
+import models.ProfileModel;
+import models.comparison.ModelAssertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import requests.AdminCreateUserRequester;
-import requests.CreateAccountRequester;
-import requests.GetUserAccountsRequester;
-import requests.MakeDepositRequester;
-import specs.RequestSpecs;
-import specs.ResponseSpecs;
+import requests.steps.AdminSteps;
+import requests.steps.UserSteps;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -24,151 +26,87 @@ public class DepositTest extends BaseTest {
     @MethodSource("validDepositAmounts")
     @ParameterizedTest
     public void authorizedUserCanMakeDepositWithValidAmountsTest(double amount) {
-        CreateUserRequest createUserRequest = CreateUserRequest.builder()
-                .username(RandomData.qenerateUsername())
-                .password(RandomData.qeneratePassword())
-                .role(String.valueOf(UserRole.USER))
-                .build();
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser();
+        ProfileModel userToDelete = UserSteps.getProfile(createUserRequest);
+        addUserForCleanup(userToDelete);
 
-        new AdminCreateUserRequester(
-                RequestSpecs.adminSpec(),
-                ResponseSpecs.entityWasCreated())
-                .post(createUserRequest);
+        AccountModel newAcc = UserSteps.createAccount(createUserRequest);
 
-        AccountModel newAcc = new CreateAccountRequester(
-                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
-                ResponseSpecs.entityWasCreated())
-                .post().extract().as(AccountModel.class);
+        MakeDepositRequest makeDepositRequest = UserSteps.makeDepositRequest(newAcc, amount);
 
-        MakeDepositRequest makeDepositRequest = MakeDepositRequest.builder()
-                .id(newAcc.getId())
-                .balance(amount)
-                .build();
+        UserSteps.makeDeposit(createUserRequest, makeDepositRequest);
 
-        new MakeDepositRequester(
-                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
-                ResponseSpecs.requestReturnsOK())
-                .post(makeDepositRequest);
-
-        List<AccountModel> accounts = List.of(new GetUserAccountsRequester(
-                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
-                ResponseSpecs.requestReturnsOK())
-                .get()
+        List<AccountModel> accounts = List.of(UserSteps.getAccounts(createUserRequest)
                 .extract().as(AccountModel[].class));
 
-        softly.assertThat(accounts.getFirst().getId()).isEqualTo(newAcc.getId());
-        softly.assertThat(accounts.getFirst().getBalance()).isEqualTo(amount);
-        softly.assertThat(accounts.getFirst().getAccountNumber()).isEqualTo(newAcc.getAccountNumber());
+        AccountModel firstAcc = accounts.getFirst();
 
+        softly.assertThat(firstAcc.getBalance()).isEqualTo(amount);
+        ModelAssertions.assertThatModel(firstAcc, newAcc).match();
     }
 
     @Tag("NEGATIVE")
     @MethodSource("invalidDepositAmounts")
     @ParameterizedTest
     public void authorizedUserCanNotMakeDepositWithInvalidAmountsTest(double amount, String errorValue) {
-        CreateUserRequest createUserRequest = CreateUserRequest.builder()
-                .username(RandomData.qenerateUsername())
-                .password(RandomData.qeneratePassword())
-                .role(String.valueOf(UserRole.USER))
-                .build();
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser();
+        ProfileModel userToDelete = UserSteps.getProfile(createUserRequest);
+        addUserForCleanup(userToDelete);
 
-        new AdminCreateUserRequester(
-                RequestSpecs.adminSpec(),
-                ResponseSpecs.entityWasCreated())
-                .post(createUserRequest);
+        AccountModel newAcc = UserSteps.createAccount(createUserRequest);
 
-        AccountModel newAcc = new CreateAccountRequester(
-                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
-                ResponseSpecs.entityWasCreated())
-                .post().extract().as(AccountModel.class);
+        MakeDepositRequest makeDepositRequest = UserSteps.makeDepositRequest(newAcc, amount);
 
-        MakeDepositRequest makeDepositRequest = MakeDepositRequest.builder()
-                .id(newAcc.getId())
-                .balance(amount)
-                .build();
+        UserSteps.makeBadReqDeposit(createUserRequest, makeDepositRequest, errorValue);
 
-        new MakeDepositRequester(
-                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
-                ResponseSpecs.badRequest(errorValue))
-                .post(makeDepositRequest);
-
-        List<AccountModel> accounts = List.of(new GetUserAccountsRequester(
-                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
-                ResponseSpecs.requestReturnsOK())
-                .get()
+        List<AccountModel> accounts = List.of(UserSteps.getAccounts(createUserRequest)
                 .extract().as(AccountModel[].class));
 
-        softly.assertThat(accounts.getFirst().getBalance()).isEqualTo(newAcc.getBalance());
+        AccountModel firstAcc = accounts.getFirst();
 
+        ModelAssertions.assertThatModel(firstAcc, newAcc).match();
     }
 
     @Tag("NEGATIVE")
     @Test
     public void authorizedUserCanNotMakeDepositToOtherUserAccountTest() {
-        CreateUserRequest user1Request = CreateUserRequest.builder()
-                .username(RandomData.qenerateUsername())
-                .password(RandomData.qeneratePassword())
-                .role(String.valueOf(UserRole.USER))
-                .build();
+        CreateUserRequest user1Request =
+                RandomModelGenerator.generate(CreateUserRequest.class);
 
-        new AdminCreateUserRequester(
-                RequestSpecs.adminSpec(),
-                ResponseSpecs.entityWasCreated())
-                .post(user1Request);
+        AdminSteps.createUser(user1Request);
+        ProfileModel userToDelete1 = UserSteps.getProfile(user1Request);
+        addUserForCleanup(userToDelete1);
 
-        CreateUserRequest user2Request = CreateUserRequest.builder()
-                .username(RandomData.qenerateUsername())
-                .password(RandomData.qeneratePassword())
-                .role(String.valueOf(UserRole.USER))
-                .build();
+        CreateUserRequest user2Request =
+                RandomModelGenerator.generate(CreateUserRequest.class);
 
-        new AdminCreateUserRequester(
-                RequestSpecs.adminSpec(),
-                ResponseSpecs.entityWasCreated())
-                .post(user2Request);
+        AdminSteps.createUser(user2Request);
+        ProfileModel userToDelete2 = UserSteps.getProfile(user2Request);
+        addUserForCleanup(userToDelete2);
 
-        AccountModel accountUser2 = new CreateAccountRequester(
-                RequestSpecs.authUserSpec(user2Request.getUsername(), user2Request.getPassword()),
-                ResponseSpecs.entityWasCreated())
-                .post().extract().as(AccountModel.class);
+        AccountModel accountUser2 = UserSteps.createAccount(user2Request);
 
-        MakeDepositRequest makeDepositRequest = MakeDepositRequest.builder()
-                .id(accountUser2.getId())
-                .balance(RandomData.generateSum(0.01, 5000.0))
-                .build();
+        MakeDepositRequest makeDepositRequest = UserSteps.makeDepositRequest(accountUser2, 0.01, 5000.0);
 
-        new MakeDepositRequester(
-                RequestSpecs.authUserSpec(user1Request.getUsername(), user1Request.getPassword()),
-                ResponseSpecs.requestForbidden())
-                .post(makeDepositRequest);
+        UserSteps.makeForbiddenDeposit(user1Request, makeDepositRequest);
 
-        List<AccountModel> accounts = List.of(new GetUserAccountsRequester(
-                RequestSpecs.authUserSpec(user2Request.getUsername(), user2Request.getPassword()),
-                ResponseSpecs.requestReturnsOK())
-                .get()
+        List<AccountModel> accounts = List.of(UserSteps.getAccounts(user2Request)
                 .extract().as(AccountModel[].class));
 
-        softly.assertThat(accounts.getFirst().getBalance()).isEqualTo(accountUser2.getBalance());
+        AccountModel firstAcc = accounts.getFirst();
+
+        softly.assertThat(firstAcc.getBalance()).isEqualTo(accountUser2.getBalance());
+        ModelAssertions.assertThatModel(firstAcc, accountUser2).match();
     }
 
     @Tag("NEGATIVE")
     @Test
     public void authorizedUserCanNotMakeDepositToNonExistAccountTest() {
-        CreateUserRequest createUserRequest = CreateUserRequest.builder()
-                .username(RandomData.qenerateUsername())
-                .password(RandomData.qeneratePassword())
-                .role(String.valueOf(UserRole.USER))
-                .build();
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser();
+        ProfileModel userToDelete = UserSteps.getProfile(createUserRequest);
+        addUserForCleanup(userToDelete);
 
-        new AdminCreateUserRequester(
-                RequestSpecs.adminSpec(),
-                ResponseSpecs.entityWasCreated())
-                .post(createUserRequest);
-
-        AccountModel newAcc = new CreateAccountRequester(
-                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
-                ResponseSpecs.entityWasCreated())
-                .post().extract().as(AccountModel.class);
+        AccountModel newAcc = UserSteps.createAccount(createUserRequest);
 
         Integer nonExistentAccountId = newAcc.getId() + 1000;
 
@@ -177,11 +115,7 @@ public class DepositTest extends BaseTest {
                 .balance(RandomData.generateSum(0.01, 5000.0))
                 .build();
 
-        new MakeDepositRequester(
-                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
-                ResponseSpecs.requestForbidden())
-                .post(makeDepositRequest);
-
+        UserSteps.makeForbiddenDeposit(createUserRequest, makeDepositRequest);
     }
 
     public static Stream<Arguments> validDepositAmounts() {
