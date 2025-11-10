@@ -1,17 +1,20 @@
 package iteration1;
 
 import base.BaseTest;
+import enums.ErrorText;
+import enums.UserRole;
 import generators.RandomData;
 import models.CreateUserRequest;
-import models.CreateUserResponse;
-import models.ErrorText;
-import models.UserRole;
+import models.ProfileModel;
+import models.comparison.ModelAssertions;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import requests.AdminCreateUserRequester;
+import requests.skelethon.Endpoint;
+import requests.skelethon.requesters.CrudRequester;
+import requests.steps.AdminSteps;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
@@ -29,15 +32,12 @@ public class CreateUserTest extends BaseTest {
                 .role(role)
                 .build();
 
-        CreateUserResponse createUserResponse = new AdminCreateUserRequester(
-                RequestSpecs.adminSpec(),
-                ResponseSpecs.entityWasCreated())
-                .post(createUserRequest)
-                .extract().as(CreateUserResponse.class);
+        ProfileModel createUserResponse = AdminSteps.createUser(createUserRequest);
 
-        softly.assertThat(createUserRequest.getUsername()).isEqualTo(createUserResponse.getUsername());
+        addUserForCleanup(createUserResponse);
+
         softly.assertThat(createUserRequest.getPassword()).isNotEqualTo(createUserResponse.getPassword());
-        softly.assertThat(createUserRequest.getRole()).isEqualTo(createUserResponse.getRole());
+        ModelAssertions.assertThatModel(createUserRequest, createUserResponse).match();
     }
 
     @Tag("NEGATIVE")
@@ -50,10 +50,15 @@ public class CreateUserTest extends BaseTest {
                 .role(role)
                 .build();
 
-        new AdminCreateUserRequester(
+        String response = new CrudRequester(
                 RequestSpecs.adminSpec(),
-                ResponseSpecs.badRequest(errorKey, errorValue))
-                .post(createUserRequest);
+                Endpoint.ADMIN_CREATE_USER,
+                ResponseSpecs.badRequest())
+                .post(createUserRequest)
+                .extract().body().asString();
+
+        softly.assertThat(response).contains(errorKey);
+        softly.assertThat(response).contains(errorValue);
     }
 
     @Tag("NEGATIVE")
@@ -66,10 +71,15 @@ public class CreateUserTest extends BaseTest {
                 .role(role)
                 .build();
 
-        new AdminCreateUserRequester(
+        String response = new CrudRequester(
                 RequestSpecs.adminSpec(),
-                ResponseSpecs.badRequest(errorKey, errorValue))
-                .post(createUserRequest);
+                Endpoint.ADMIN_CREATE_USER,
+                ResponseSpecs.badRequest())
+                .post(createUserRequest)
+                .extract().body().asString();
+
+        softly.assertThat(response).contains(errorKey);
+        softly.assertThat(response).contains(errorValue);
     }
 
     @Tag("NEGATIVE")
@@ -82,10 +92,16 @@ public class CreateUserTest extends BaseTest {
                 .role(role)
                 .build();
 
-        new AdminCreateUserRequester(
+        String response = new CrudRequester(
                 RequestSpecs.adminSpec(),
-                ResponseSpecs.badRequest(errorKey, errorValue))
-                .post(createUserRequest);
+                Endpoint.ADMIN_CREATE_USER,
+                ResponseSpecs.badRequest())
+                .post(createUserRequest)
+                .extract().body().asString();
+
+        softly.assertThat(response).contains(errorKey);
+        softly.assertThat(response).contains(errorValue);
+
     }
 
 

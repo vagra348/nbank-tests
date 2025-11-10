@@ -11,7 +11,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ProfileModel {
+public class ProfileModel extends BaseModel {
     private Integer id;
     private String username;
     private String password;

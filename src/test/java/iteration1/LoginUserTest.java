@@ -1,14 +1,15 @@
 package iteration1;
 
 import base.BaseTest;
-import generators.RandomData;
-import models.*;
+import models.CreateUserRequest;
+import models.LoginUserRequest;
+import models.LoginUserResponse;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import requests.AdminCreateUserRequester;
-import requests.AdminGetUsersListRequester;
-import requests.LoginUserRequester;
+import requests.skelethon.Endpoint;
+import requests.skelethon.requesters.CrudRequester;
+import requests.steps.AdminSteps;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
@@ -22,8 +23,9 @@ public class LoginUserTest extends BaseTest {
                 .password("admin")
                 .build();
 
-        new LoginUserRequester(
+        new CrudRequester(
                 RequestSpecs.unauthSpec(),
+                Endpoint.LOGIN,
                 ResponseSpecs.requestReturnsOK())
                 .post(loginUserRequest)
                 .header("Authorization", "Basic YWRtaW46YWRtaW4=");
@@ -32,29 +34,20 @@ public class LoginUserTest extends BaseTest {
     @Test
     @Tag("POSITIVE")
     public void userCanGenerateAuthTokenTest() {
-        CreateUserRequest createUserRequest = CreateUserRequest.builder()
-                .username(RandomData.qenerateUsername())
-                .password(RandomData.qeneratePassword())
-                .role(String.valueOf(UserRole.USER))
-                .build();
-
-        new AdminCreateUserRequester(
-                RequestSpecs.adminSpec(),
-                ResponseSpecs.entityWasCreated())
-                .post(createUserRequest);
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
         LoginUserRequest loginUserRequest = LoginUserRequest.builder()
                 .username(createUserRequest.getUsername())
                 .password(createUserRequest.getPassword())
                 .build();
 
-        LoginUserResponse loginUserResponse = new LoginUserRequester(
+        LoginUserResponse loginUserResponse = new CrudRequester(
                 RequestSpecs.unauthSpec(),
+                Endpoint.LOGIN,
                 ResponseSpecs.requestReturnsOK())
                 .post(loginUserRequest)
                 .header("Authorization", Matchers.notNullValue())
                 .extract().as(LoginUserResponse.class);
-
 
         softly.assertThat(loginUserRequest.getUsername()).isEqualTo(loginUserResponse.getUsername());
         softly.assertThat(createUserRequest.getRole()).isEqualTo(loginUserResponse.getRole());
@@ -63,19 +56,11 @@ public class LoginUserTest extends BaseTest {
     @Test
     @Tag("POSITIVE")
     public void authorizedAdminCanSeeUsersListTest() {
-        CreateUserRequest createUserRequest = CreateUserRequest.builder()
-                .username(RandomData.qenerateUsername())
-                .password(RandomData.qeneratePassword())
-                .role(String.valueOf(UserRole.USER))
-                .build();
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
-        new AdminCreateUserRequester(
+        new CrudRequester(
                 RequestSpecs.adminSpec(),
-                ResponseSpecs.entityWasCreated())
-                .post(createUserRequest);
-
-        new AdminGetUsersListRequester(
-                RequestSpecs.adminSpec(),
+                Endpoint.ADMIN_GET_USERS_LIST,
                 ResponseSpecs.requestReturnsOK())
                 .get()
                 .assertThat()
@@ -90,8 +75,9 @@ public class LoginUserTest extends BaseTest {
                 .password("TestPass12345$")
                 .build();
 
-        new LoginUserRequester(
+        new CrudRequester(
                 RequestSpecs.unauthSpec(),
+                Endpoint.LOGIN,
                 ResponseSpecs.requestUnauthorized())
                 .post(loginUserRequest);
     }
@@ -104,8 +90,9 @@ public class LoginUserTest extends BaseTest {
                 .password("adminIncorrectPass")
                 .build();
 
-        new LoginUserRequester(
+        new CrudRequester(
                 RequestSpecs.unauthSpec(),
+                Endpoint.LOGIN,
                 ResponseSpecs.requestUnauthorized())
                 .post(loginUserRequest);
     }

@@ -1,8 +1,8 @@
 package specs;
 
+import enums.ErrorText;
 import io.restassured.builder.ResponseSpecBuilder;
 import io.restassured.specification.ResponseSpecification;
-import models.ErrorText;
 import org.apache.http.HttpStatus;
 import org.hamcrest.Matchers;
 
@@ -29,6 +29,12 @@ public class ResponseSpecs {
         return defaultResponseBuilder()
                 .expectStatusCode(HttpStatus.SC_BAD_REQUEST)
                 .expectBody(errorKey, Matchers.hasItem(errorValue))
+                .build();
+    }
+
+    public static ResponseSpecification badRequest(){
+        return defaultResponseBuilder()
+                .expectStatusCode(HttpStatus.SC_BAD_REQUEST)
                 .build();
     }
 
