@@ -32,6 +32,12 @@ public class ResponseSpecs {
                 .build();
     }
 
+    public static ResponseSpecification badRequest(){
+        return defaultResponseBuilder()
+                .expectStatusCode(HttpStatus.SC_BAD_REQUEST)
+                .build();
+    }
+
     public static ResponseSpecification badRequest(String errorValue){
         return defaultResponseBuilder()
                 .expectStatusCode(HttpStatus.SC_BAD_REQUEST)

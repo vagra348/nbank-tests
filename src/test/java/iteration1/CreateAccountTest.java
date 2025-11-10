@@ -4,7 +4,6 @@ import base.BaseTest;
 import io.restassured.response.ValidatableResponse;
 import models.AccountModel;
 import models.CreateUserRequest;
-import models.ProfileModel;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -12,7 +11,6 @@ import requests.skelethon.Endpoint;
 import requests.skelethon.requesters.CrudRequester;
 import requests.skelethon.requesters.ValidatedCrudRequester;
 import requests.steps.AdminSteps;
-import requests.steps.UserSteps;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
@@ -24,9 +22,7 @@ public class CreateAccountTest extends BaseTest {
     @Tag("POSITIVE")
     @Test
     public void authorizedUserCanSeeHisAccounts() {
-        CreateUserRequest createUserRequest = AdminSteps.createNewUser();
-        ProfileModel userToDelete = UserSteps.getProfile(createUserRequest);
-        addUserForCleanup(userToDelete);
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
         new CrudRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
@@ -46,9 +42,7 @@ public class CreateAccountTest extends BaseTest {
     @Tag("POSITIVE")
     @Test
     public void authorizedUserCanCreateAccount() {
-        CreateUserRequest createUserRequest = AdminSteps.createNewUser();
-        ProfileModel userToDelete = UserSteps.getProfile(createUserRequest);
-        addUserForCleanup(userToDelete);
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
         AccountModel account = new ValidatedCrudRequester<AccountModel>(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),

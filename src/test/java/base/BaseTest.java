@@ -5,11 +5,12 @@ import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import requests.steps.AdminSteps;
+import utils.UserCleanupRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class BaseTest {
+public class BaseTest implements UserCleanupRegistry {
     protected SoftAssertions softly;
     protected static final ThreadLocal<List<ProfileModel>> usersToCleanup = ThreadLocal.withInitial(ArrayList::new);
 
@@ -33,7 +34,9 @@ public class BaseTest {
         softly.assertAll();
     }
 
+    @Override
     public void addUserForCleanup(ProfileModel user) {
         usersToCleanup.get().add(user);
     }
+
 }

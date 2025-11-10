@@ -3,7 +3,6 @@ package iteration2;
 import base.BaseTest;
 import enums.ErrorText;
 import enums.TransactionType;
-import generators.RandomModelGenerator;
 import models.*;
 import models.comparison.ModelAssertions;
 import org.junit.jupiter.api.Tag;
@@ -22,9 +21,7 @@ public class TransferTest extends BaseTest {
     @Tag("POSITIVE")
     @Test
     public void authorizedUserCanTransferBetweenOwnAccountsTest() {
-        CreateUserRequest createUserRequest = AdminSteps.createNewUser();
-        ProfileModel userToDelete = UserSteps.getProfile(createUserRequest);
-        addUserForCleanup(userToDelete);
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
         AccountModel senderAccount = UserSteps.createAccount(createUserRequest);
 
@@ -85,9 +82,7 @@ public class TransferTest extends BaseTest {
     @Tag("POSITIVE")
     @Test
     public void authorizedUserCanSeeTransactionsTest() {
-        CreateUserRequest createUserRequest = AdminSteps.createNewUser();
-        ProfileModel userToDelete = UserSteps.getProfile(createUserRequest);
-        addUserForCleanup(userToDelete);
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
         AccountModel senderAccount = UserSteps.createAccount(createUserRequest);
 
@@ -125,19 +120,9 @@ public class TransferTest extends BaseTest {
     @Tag("POSITIVE")
     @Test
     public void authorizedUserCanTransferToOtherUserAccountTest() {
-        CreateUserRequest user1Request =
-                RandomModelGenerator.generate(CreateUserRequest.class);
+        CreateUserRequest user1Request = AdminSteps.createNewUser(this);
 
-        AdminSteps.createUser(user1Request);
-        ProfileModel userToDelete1 = UserSteps.getProfile(user1Request);
-        addUserForCleanup(userToDelete1);
-
-        CreateUserRequest user2Request =
-                RandomModelGenerator.generate(CreateUserRequest.class);
-
-        AdminSteps.createUser(user2Request);
-        ProfileModel userToDelete2 = UserSteps.getProfile(user2Request);
-        addUserForCleanup(userToDelete2);
+        CreateUserRequest user2Request = AdminSteps.createNewUser(this);
 
         AccountModel senderAccount = UserSteps.createAccount(user1Request);
 
@@ -201,9 +186,7 @@ public class TransferTest extends BaseTest {
     @Tag("NEGATIVE")
     @Test
     public void authorizedUserCanNotTransferMoreThanBalanceTest() {
-        CreateUserRequest createUserRequest = AdminSteps.createNewUser();
-        ProfileModel userToDelete = UserSteps.getProfile(createUserRequest);
-        addUserForCleanup(userToDelete);
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
         AccountModel senderAccount = UserSteps.createAccount(createUserRequest);
 
@@ -238,9 +221,7 @@ public class TransferTest extends BaseTest {
     @MethodSource("validTransferAmounts")
     @ParameterizedTest
     public void authorizedUserCanTransferWithValidAmountsTest(double depositAmount, double transferAmount) {
-        CreateUserRequest createUserRequest = AdminSteps.createNewUser();
-        ProfileModel userToDelete = UserSteps.getProfile(createUserRequest);
-        addUserForCleanup(userToDelete);
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
         AccountModel senderAccount = UserSteps.createAccount(createUserRequest);
 
@@ -278,9 +259,7 @@ public class TransferTest extends BaseTest {
     @MethodSource("invalidTransferAmounts")
     @ParameterizedTest
     public void authorizedUserCanNotTransferWithInvalidAmountsTest(double amount, String errorValue) {
-        CreateUserRequest createUserRequest = AdminSteps.createNewUser();
-        ProfileModel userToDelete = UserSteps.getProfile(createUserRequest);
-        addUserForCleanup(userToDelete);
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
         AccountModel senderAccount = UserSteps.createAccount(createUserRequest);
 

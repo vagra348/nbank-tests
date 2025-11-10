@@ -9,10 +9,11 @@ import requests.skelethon.requesters.CrudRequester;
 import requests.skelethon.requesters.ValidatedCrudRequester;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
+import utils.UserCleanupRegistry;
 
 public class AdminSteps {
 
-    public static CreateUserRequest createNewUser() {
+    public static CreateUserRequest createNewUser(UserCleanupRegistry cleanupRegistry) {
         CreateUserRequest createUserRequest =
                 RandomModelGenerator.generate(CreateUserRequest.class);
 
@@ -22,17 +23,18 @@ public class AdminSteps {
                 ResponseSpecs.entityWasCreated())
                 .post(createUserRequest);
 
+        cleanupRegistry.addUserForCleanup(profile);
+
         return createUserRequest;
     }
 
-    public static CreateUserRequest createUser(CreateUserRequest createUserRequest) {
-        new ValidatedCrudRequester<ProfileModel>(
+
+    public static ProfileModel createUser(CreateUserRequest createUserRequest) {
+        return new ValidatedCrudRequester<ProfileModel>(
                 RequestSpecs.adminSpec(),
                 Endpoint.ADMIN_CREATE_USER,
                 ResponseSpecs.entityWasCreated())
                 .post(createUserRequest);
-
-        return createUserRequest;
     }
 
     public static ValidatableResponse deleteUser(ProfileModel profileModel) {

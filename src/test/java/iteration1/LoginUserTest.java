@@ -4,14 +4,12 @@ import base.BaseTest;
 import models.CreateUserRequest;
 import models.LoginUserRequest;
 import models.LoginUserResponse;
-import models.ProfileModel;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import requests.skelethon.Endpoint;
 import requests.skelethon.requesters.CrudRequester;
 import requests.steps.AdminSteps;
-import requests.steps.UserSteps;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
@@ -36,9 +34,7 @@ public class LoginUserTest extends BaseTest {
     @Test
     @Tag("POSITIVE")
     public void userCanGenerateAuthTokenTest() {
-        CreateUserRequest createUserRequest = AdminSteps.createNewUser();
-        ProfileModel userToDelete = UserSteps.getProfile(createUserRequest);
-        addUserForCleanup(userToDelete);
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
         LoginUserRequest loginUserRequest = LoginUserRequest.builder()
                 .username(createUserRequest.getUsername())
@@ -60,9 +56,7 @@ public class LoginUserTest extends BaseTest {
     @Test
     @Tag("POSITIVE")
     public void authorizedAdminCanSeeUsersListTest() {
-        CreateUserRequest createUserRequest = AdminSteps.createNewUser();
-        ProfileModel userToDelete = UserSteps.getProfile(createUserRequest);
-        addUserForCleanup(userToDelete);
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
         new CrudRequester(
                 RequestSpecs.adminSpec(),

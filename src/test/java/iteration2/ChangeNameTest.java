@@ -23,9 +23,7 @@ public class ChangeNameTest extends BaseTest {
     @Tag("POSITIVE")
     @Test
     public void authorizedUserCanChangeNameTest() {
-        CreateUserRequest createUserRequest = AdminSteps.createNewUser();
-        ProfileModel userToDelete = UserSteps.getProfile(createUserRequest);
-        addUserForCleanup(userToDelete);
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
         ChangeNameRequest changeNameRequest = RandomModelGenerator.generate(ChangeNameRequest.class);
 
@@ -46,9 +44,7 @@ public class ChangeNameTest extends BaseTest {
     @MethodSource("invalidNameData")
     @ParameterizedTest
     public void authorizedUserCanNotChangeNameWithInvalidDataTest(String name, String errorValue) {
-        CreateUserRequest createUserRequest = AdminSteps.createNewUser();
-        ProfileModel userToDelete = UserSteps.getProfile(createUserRequest);
-        addUserForCleanup(userToDelete);
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
         ChangeNameRequest changeNameRequest = ChangeNameRequest.builder().name(name).build();
 

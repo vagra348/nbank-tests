@@ -13,7 +13,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import requests.skelethon.Endpoint;
-import requests.skelethon.requesters.ValidatedCrudRequester;
+import requests.skelethon.requesters.CrudRequester;
+import requests.steps.AdminSteps;
 import specs.RequestSpecs;
 import specs.ResponseSpecs;
 
@@ -31,11 +32,7 @@ public class CreateUserTest extends BaseTest {
                 .role(role)
                 .build();
 
-        ProfileModel createUserResponse = new ValidatedCrudRequester<ProfileModel>(
-                RequestSpecs.adminSpec(),
-                Endpoint.ADMIN_CREATE_USER,
-                ResponseSpecs.entityWasCreated())
-                .post(createUserRequest);
+        ProfileModel createUserResponse = AdminSteps.createUser(createUserRequest);
 
         addUserForCleanup(createUserResponse);
 
@@ -53,12 +50,15 @@ public class CreateUserTest extends BaseTest {
                 .role(role)
                 .build();
 
-        ProfileModel user = new ValidatedCrudRequester<ProfileModel>(
+        String response = new CrudRequester(
                 RequestSpecs.adminSpec(),
                 Endpoint.ADMIN_CREATE_USER,
-                ResponseSpecs.badRequest(errorKey, errorValue))
-                .post(createUserRequest);
-        addUserForCleanup(user);
+                ResponseSpecs.badRequest())
+                .post(createUserRequest)
+                .extract().body().asString();
+
+        softly.assertThat(response).contains(errorKey);
+        softly.assertThat(response).contains(errorValue);
     }
 
     @Tag("NEGATIVE")
@@ -71,12 +71,15 @@ public class CreateUserTest extends BaseTest {
                 .role(role)
                 .build();
 
-        ProfileModel user = new ValidatedCrudRequester<ProfileModel>(
+        String response = new CrudRequester(
                 RequestSpecs.adminSpec(),
                 Endpoint.ADMIN_CREATE_USER,
-                ResponseSpecs.badRequest(errorKey, errorValue))
-                .post(createUserRequest);
-        addUserForCleanup(user);
+                ResponseSpecs.badRequest())
+                .post(createUserRequest)
+                .extract().body().asString();
+
+        softly.assertThat(response).contains(errorKey);
+        softly.assertThat(response).contains(errorValue);
     }
 
     @Tag("NEGATIVE")
@@ -89,12 +92,16 @@ public class CreateUserTest extends BaseTest {
                 .role(role)
                 .build();
 
-        ProfileModel user = new ValidatedCrudRequester<ProfileModel>(
+        String response = new CrudRequester(
                 RequestSpecs.adminSpec(),
                 Endpoint.ADMIN_CREATE_USER,
-                ResponseSpecs.badRequest(errorKey, errorValue))
-                .post(createUserRequest);
-        addUserForCleanup(user);
+                ResponseSpecs.badRequest())
+                .post(createUserRequest)
+                .extract().body().asString();
+
+        softly.assertThat(response).contains(errorKey);
+        softly.assertThat(response).contains(errorValue);
+
     }
 
 

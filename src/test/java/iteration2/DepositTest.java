@@ -3,11 +3,9 @@ package iteration2;
 import base.BaseTest;
 import enums.ErrorText;
 import generators.RandomData;
-import generators.RandomModelGenerator;
 import models.AccountModel;
 import models.CreateUserRequest;
 import models.MakeDepositRequest;
-import models.ProfileModel;
 import models.comparison.ModelAssertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -26,9 +24,7 @@ public class DepositTest extends BaseTest {
     @MethodSource("validDepositAmounts")
     @ParameterizedTest
     public void authorizedUserCanMakeDepositWithValidAmountsTest(double amount) {
-        CreateUserRequest createUserRequest = AdminSteps.createNewUser();
-        ProfileModel userToDelete = UserSteps.getProfile(createUserRequest);
-        addUserForCleanup(userToDelete);
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
         AccountModel newAcc = UserSteps.createAccount(createUserRequest);
 
@@ -49,9 +45,7 @@ public class DepositTest extends BaseTest {
     @MethodSource("invalidDepositAmounts")
     @ParameterizedTest
     public void authorizedUserCanNotMakeDepositWithInvalidAmountsTest(double amount, String errorValue) {
-        CreateUserRequest createUserRequest = AdminSteps.createNewUser();
-        ProfileModel userToDelete = UserSteps.getProfile(createUserRequest);
-        addUserForCleanup(userToDelete);
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
         AccountModel newAcc = UserSteps.createAccount(createUserRequest);
 
@@ -70,19 +64,9 @@ public class DepositTest extends BaseTest {
     @Tag("NEGATIVE")
     @Test
     public void authorizedUserCanNotMakeDepositToOtherUserAccountTest() {
-        CreateUserRequest user1Request =
-                RandomModelGenerator.generate(CreateUserRequest.class);
+        CreateUserRequest user1Request = AdminSteps.createNewUser(this);
 
-        AdminSteps.createUser(user1Request);
-        ProfileModel userToDelete1 = UserSteps.getProfile(user1Request);
-        addUserForCleanup(userToDelete1);
-
-        CreateUserRequest user2Request =
-                RandomModelGenerator.generate(CreateUserRequest.class);
-
-        AdminSteps.createUser(user2Request);
-        ProfileModel userToDelete2 = UserSteps.getProfile(user2Request);
-        addUserForCleanup(userToDelete2);
+        CreateUserRequest user2Request = AdminSteps.createNewUser(this);
 
         AccountModel accountUser2 = UserSteps.createAccount(user2Request);
 
@@ -102,9 +86,7 @@ public class DepositTest extends BaseTest {
     @Tag("NEGATIVE")
     @Test
     public void authorizedUserCanNotMakeDepositToNonExistAccountTest() {
-        CreateUserRequest createUserRequest = AdminSteps.createNewUser();
-        ProfileModel userToDelete = UserSteps.getProfile(createUserRequest);
-        addUserForCleanup(userToDelete);
+        CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
         AccountModel newAcc = UserSteps.createAccount(createUserRequest);
 
