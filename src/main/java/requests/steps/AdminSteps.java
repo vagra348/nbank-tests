@@ -23,7 +23,9 @@ public class AdminSteps {
                 ResponseSpecs.entityWasCreated())
                 .post(createUserRequest);
 
-        cleanupRegistry.addUserForCleanup(profile);
+        if (cleanupRegistry!=null){
+            cleanupRegistry.addUserForCleanup(profile);
+        }
 
         return createUserRequest;
     }

@@ -1,4 +1,4 @@
-package iteration2;
+package iteration2.api;
 
 import base.BaseTest;
 import enums.ErrorText;
