@@ -1,4 +1,4 @@
-package iteration1;
+package iteration1.api;
 
 import base.BaseTest;
 import io.restassured.response.ValidatableResponse;
