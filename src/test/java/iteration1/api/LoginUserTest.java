@@ -1,17 +1,17 @@
 package iteration1.api;
 
+import api.models.CreateUserRequest;
+import api.models.LoginUserRequest;
+import api.models.LoginUserResponse;
+import api.requests.skelethon.Endpoint;
+import api.requests.skelethon.requesters.CrudRequester;
+import api.requests.steps.AdminSteps;
+import api.specs.RequestSpecs;
+import api.specs.ResponseSpecs;
 import base.BaseTest;
-import models.CreateUserRequest;
-import models.LoginUserRequest;
-import models.LoginUserResponse;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import requests.skelethon.Endpoint;
-import requests.skelethon.requesters.CrudRequester;
-import requests.steps.AdminSteps;
-import specs.RequestSpecs;
-import specs.ResponseSpecs;
 
 public class LoginUserTest extends BaseTest {
 
