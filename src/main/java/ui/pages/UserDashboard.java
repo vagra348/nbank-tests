@@ -8,6 +8,7 @@ import static com.codeborne.selenide.Selenide.$;
 
 @Getter
 public class UserDashboard extends BasePage<UserDashboard> {
+    public static final String NO_NAME_TEXT = "noname";
     private SelenideElement welcomeText = $(Selectors.byClassName("welcome-text"));
     private SelenideElement createAccBtn = $(Selectors.byXpath("//button[contains(text(),'Create New Account')]"));
     private SelenideElement depositMoneyBtn = $(Selectors.byText("\uD83D\uDCB0 Deposit Money"));

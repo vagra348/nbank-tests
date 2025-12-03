@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeAll;
 
 import java.util.Map;
 
+import static com.codeborne.selenide.Configuration.timeout;
 import static com.codeborne.selenide.Selenide.executeJavaScript;
 
 public class BaseUiTest extends BaseTest {
@@ -18,6 +19,8 @@ public class BaseUiTest extends BaseTest {
         Configuration.baseUrl = Config.getProperty("uiBaseUrl");
         Configuration.browser = Config.getProperty("browser");
         Configuration.browserSize = Config.getProperty("browserSize");
+
+        timeout = 8000;
 
         Configuration.browserCapabilities.setCapability("selenoid:options",
                 Map.of("enableVNC", true, "enableLog", true)

@@ -43,11 +43,11 @@ public class ChangeNameTest extends BaseUiTest {
         new UserDashboard().open();
 
         new UserDashboard().open().getUserNameProfile().click();
-        new EditProfilePage().changeName("oneWord")
+        new EditProfilePage().changeName(RandomData.qenerateWord())
                 .checkAlertAndAccept(BankAlert.INVALID_NAME.getMessage());
 
         new UserDashboard().open().getWelcomeText().shouldBe(Condition.visible)
-                .shouldHave(Condition.partialText("noname"));
+                .shouldHave(Condition.partialText(UserDashboard.NO_NAME_TEXT));
 
         ProfileModel changedUser = UserSteps.getProfile(user);
         assertThat(changedUser.getName()).isEqualTo(null);

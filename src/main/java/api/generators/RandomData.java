@@ -22,6 +22,10 @@ public class RandomData {
                 " " + RandomStringUtils.randomAlphabetic(5);
     }
 
+    public static String qenerateWord(){
+        return RandomStringUtils.randomAlphabetic(7);
+    }
+
     public static Double generateSum(Double min, Double max){
         return RandomGenerator.getDefault().nextDouble(min, max);
     }
