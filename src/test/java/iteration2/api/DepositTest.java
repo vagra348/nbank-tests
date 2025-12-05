@@ -1,19 +1,19 @@
 package iteration2.api;
 
+import api.enums.ErrorText;
+import api.generators.RandomData;
+import api.models.AccountModel;
+import api.models.CreateUserRequest;
+import api.models.MakeDepositRequest;
+import api.models.comparison.ModelAssertions;
+import api.requests.steps.AdminSteps;
+import api.requests.steps.UserSteps;
 import base.BaseTest;
-import enums.ErrorText;
-import generators.RandomData;
-import models.AccountModel;
-import models.CreateUserRequest;
-import models.MakeDepositRequest;
-import models.comparison.ModelAssertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import requests.steps.AdminSteps;
-import requests.steps.UserSteps;
 
 import java.util.List;
 import java.util.stream.Stream;

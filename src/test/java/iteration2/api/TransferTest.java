@@ -1,17 +1,17 @@
 package iteration2.api;
 
+import api.enums.ErrorText;
+import api.enums.TransactionType;
+import api.models.*;
+import api.models.comparison.ModelAssertions;
+import api.requests.steps.AdminSteps;
+import api.requests.steps.UserSteps;
 import base.BaseTest;
-import enums.ErrorText;
-import enums.TransactionType;
-import models.*;
-import models.comparison.ModelAssertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import requests.steps.AdminSteps;
-import requests.steps.UserSteps;
 
 import java.util.List;
 import java.util.stream.Stream;

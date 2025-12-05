@@ -1,22 +1,22 @@
 package iteration1.api;
 
+import api.enums.ErrorText;
+import api.enums.UserRole;
+import api.generators.RandomData;
+import api.models.CreateUserRequest;
+import api.models.ProfileModel;
+import api.models.comparison.ModelAssertions;
+import api.requests.skelethon.Endpoint;
+import api.requests.skelethon.requesters.CrudRequester;
+import api.requests.steps.AdminSteps;
+import api.specs.RequestSpecs;
+import api.specs.ResponseSpecs;
 import base.BaseTest;
-import enums.ErrorText;
-import enums.UserRole;
-import generators.RandomData;
-import models.CreateUserRequest;
-import models.ProfileModel;
-import models.comparison.ModelAssertions;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import requests.skelethon.Endpoint;
-import requests.skelethon.requesters.CrudRequester;
-import requests.steps.AdminSteps;
-import specs.RequestSpecs;
-import specs.ResponseSpecs;
 
 import java.util.stream.Stream;
 

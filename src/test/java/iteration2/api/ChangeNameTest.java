@@ -1,20 +1,20 @@
 package iteration2.api;
 
+import api.enums.ErrorText;
+import api.generators.RandomModelGenerator;
+import api.models.ChangeNameRequest;
+import api.models.ChangeNameResponse;
+import api.models.CreateUserRequest;
+import api.models.ProfileModel;
+import api.models.comparison.ModelAssertions;
+import api.requests.steps.AdminSteps;
+import api.requests.steps.UserSteps;
 import base.BaseTest;
-import enums.ErrorText;
-import generators.RandomModelGenerator;
-import models.ChangeNameRequest;
-import models.ChangeNameResponse;
-import models.CreateUserRequest;
-import models.ProfileModel;
-import models.comparison.ModelAssertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import requests.steps.AdminSteps;
-import requests.steps.UserSteps;
 
 import java.util.stream.Stream;
 

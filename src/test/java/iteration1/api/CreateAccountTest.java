@@ -1,18 +1,18 @@
 package iteration1.api;
 
+import api.models.AccountModel;
+import api.models.CreateUserRequest;
+import api.requests.skelethon.Endpoint;
+import api.requests.skelethon.requesters.CrudRequester;
+import api.requests.skelethon.requesters.ValidatedCrudRequester;
+import api.requests.steps.AdminSteps;
+import api.specs.RequestSpecs;
+import api.specs.ResponseSpecs;
 import base.BaseTest;
 import io.restassured.response.ValidatableResponse;
-import models.AccountModel;
-import models.CreateUserRequest;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import requests.skelethon.Endpoint;
-import requests.skelethon.requesters.CrudRequester;
-import requests.skelethon.requesters.ValidatedCrudRequester;
-import requests.steps.AdminSteps;
-import specs.RequestSpecs;
-import specs.ResponseSpecs;
 
 import java.util.List;
 

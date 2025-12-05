@@ -1,11 +1,11 @@
 package base;
 
-import models.ProfileModel;
+import api.models.ProfileModel;
+import api.requests.steps.AdminSteps;
+import api.utils.UserCleanupRegistry;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import requests.steps.AdminSteps;
-import utils.UserCleanupRegistry;
 
 import java.util.ArrayList;
 import java.util.List;
