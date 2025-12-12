@@ -7,28 +7,29 @@ import api.models.comparison.ModelAssertions;
 import api.requests.steps.AdminSteps;
 import base.BaseUiTest;
 import com.codeborne.selenide.Condition;
+import common.annotations.AdminSession;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import ui.pages.AdminPanel;
 import ui.pages.BankAlert;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CreateUserTest extends BaseUiTest {
 
     @Tag("POSITIVE")
     @Test
+    @AdminSession
     public void adminCanCreateUserTest(){
-        CreateUserRequest admin = CreateUserRequest.getAdmin();
-        authWithToken(admin);
         new AdminPanel().open().getAdminPanelText().shouldBe(Condition.visible);
 
         CreateUserRequest newUser = RandomModelGenerator.generate(CreateUserRequest.class);
-        new AdminPanel().open()
+        assertTrue(new AdminPanel().open()
                 .createUser(newUser.getUsername(), newUser.getPassword())
                 .checkAlertAndAccept(BankAlert.USER_CREATED_SUCCESSFULLY.getMessage())
                 .getAllUsers()
-                .findBy(Condition.partialText(newUser.getUsername())).shouldBe(Condition.visible);
+                .stream().anyMatch(userBadge -> userBadge.getUsername().equals(newUser.getUsername())));
 
         ProfileModel createdUser = AdminSteps.getAllUsers().stream()
                 .filter(user -> user.getUsername().equals(newUser.getUsername()))
@@ -39,17 +40,16 @@ public class CreateUserTest extends BaseUiTest {
 
     @Tag("NEGATIVE")
     @Test
+    @AdminSession
     public void adminCanNotCreateUserWithInvalidDataTest(){
-        CreateUserRequest admin = CreateUserRequest.getAdmin();
-        authWithToken(admin);
         new AdminPanel().open().getAdminPanelText().shouldBe(Condition.visible);
 
         CreateUserRequest newUser = RandomModelGenerator.generate(CreateUserRequest.class);
         newUser.setUsername("a");
-        new AdminPanel().open()
+        assertTrue(new AdminPanel().open()
                 .createUser(newUser.getUsername(), newUser.getPassword())
                 .checkAlertAndAccept(BankAlert.USERNAME_MUST_BE_BETWEEN_3_AND_15_CH.getMessage())
-                .getAllUsers().findBy(Condition.partialText(newUser.getUsername())).shouldNotBe(Condition.exist);
+                .getAllUsers().stream().noneMatch(userBadge -> userBadge.getUsername().equals(newUser.getUsername())));
 
         long usersWithSameUsrnmAsNewUser = AdminSteps.getAllUsers().stream()
                 .filter(user -> user.getUsername().equals(newUser.getUsername()))
