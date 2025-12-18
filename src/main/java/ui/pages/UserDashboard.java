@@ -3,11 +3,13 @@ package ui.pages;
 import com.codeborne.selenide.Selectors;
 import com.codeborne.selenide.SelenideElement;
 import lombok.Getter;
+import ui.elements.WelcomeTitle;
 
 import static com.codeborne.selenide.Selenide.$;
 
 @Getter
 public class UserDashboard extends BasePage<UserDashboard> {
+    public static final String WELCOME_NONAME_TEXT = "Welcome, noname!";
     public static final String NO_NAME_TEXT = "noname";
     private SelenideElement welcomeText = $(Selectors.byClassName("welcome-text"));
     private SelenideElement createAccBtn = $(Selectors.byXpath("//button[contains(text(),'Create New Account')]"));
@@ -18,6 +20,10 @@ public class UserDashboard extends BasePage<UserDashboard> {
     public UserDashboard createNewAccount() {
         createAccBtn.click();
         return this;
+    }
+
+    public WelcomeTitle getWelcomeTitle() {
+        return generatePageElement(welcomeText, WelcomeTitle::new);
     }
 
     @Override

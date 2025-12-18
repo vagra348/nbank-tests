@@ -40,7 +40,7 @@ public class LoginUserTest extends BaseUiTest {
                 .getPage(UserDashboard.class)
                 .getWelcomeText()
                 .shouldBe(Condition.visible)
-                .shouldHave(Condition.text("Welcome, noname!"));
+                .shouldHave(Condition.text(UserDashboard.WELCOME_NONAME_TEXT));
     }
 
     @Tag("NEGATIVE")
