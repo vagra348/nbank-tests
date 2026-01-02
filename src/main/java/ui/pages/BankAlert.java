@@ -8,7 +8,7 @@ public enum BankAlert {
     USERNAME_MUST_BE_BETWEEN_3_AND_15_CH("Username must be between 3 and 15 characters"),
     ACCOUNT_CREATED("✅ New Account Created! Account Number:"),
     NAME_UPDATED_SUCCESSFULLY("✅ Name updated successfully!"),
-    INVALID_NAME("❌ Please enter a valid name."),
+    INVALID_NAME("Name must contain two words with letters only"),
     SUCCESSFULLY_DEPOSITED("✅ Successfully deposited"),
     DEPOSIT_LESS_OR_EQUAL_TO_5000("❌ Please deposit less or equal to 5000$."),
     ENTER_VALID_AMOUNT("❌ Please enter a valid amount."),

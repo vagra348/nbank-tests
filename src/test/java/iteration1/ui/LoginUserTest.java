@@ -22,9 +22,7 @@ public class LoginUserTest extends BaseUiTest {
         CreateUserRequest admin = CreateUserRequest.getAdmin();
 
         new LoginPage().open()
-                .closeAlertIfPresent(3, "dismiss") //не работает, нужно придумать исправление или совершенно новый подход
                 .login(admin.getUsername(), admin.getPassword())
-                .closeAlertIfPresent(3, "accept")
                 .getPage(AdminPanel.class)
                 .getAdminPanelText()
                 .shouldBe(Condition.visible);
