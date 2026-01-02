@@ -21,6 +21,7 @@ public class CreateUserTest extends BaseUiTest {
 
     @Tag("POSITIVE")
     @Test
+    @Tag("ui")
     @AdminSession
     public void adminCanCreateUserTest() {
 
@@ -41,6 +42,7 @@ public class CreateUserTest extends BaseUiTest {
 
     @Tag("NEGATIVE")
     @Test
+    @Tag("ui")
     @AdminSession
     public void adminCanNotCreateUserWithInvalidDataTest() {
         new AdminPanel().open().getAdminPanelText().shouldBe(Condition.visible);
