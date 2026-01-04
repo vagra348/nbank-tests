@@ -1,10 +1,16 @@
 package iteration2.api;
 
+import api.dao.AccountDao;
+import api.dao.TransactionDao;
+import api.dao.comparison.DaoAndModelAssertions;
+import api.database.Condition;
+import api.database.DBRequest;
 import api.enums.ErrorText;
 import api.enums.TransactionType;
 import api.models.*;
 import api.models.comparison.ModelAssertions;
 import api.requests.steps.AdminSteps;
+import api.requests.steps.DataBaseSteps;
 import api.requests.steps.UserSteps;
 import base.BaseTest;
 import org.junit.jupiter.api.Tag;
@@ -15,6 +21,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.List;
 import java.util.stream.Stream;
+
+import static org.assertj.core.api.Assertions.offset;
 
 public class TransferTest extends BaseTest {
 
@@ -75,9 +83,29 @@ public class TransferTest extends BaseTest {
                 .orElseThrow(() -> new AssertionError("Transaction with id %d not found".formatted(receiverAccount.getId())));
 
 
-        softly.assertThat(changedSenderAcc.getBalance()).isEqualTo(makeDepositRequest.getBalance() - transferRequest.getAmount());
-        softly.assertThat(changedReceiverAcc.getBalance()).isEqualTo(transferRequest.getAmount());
+        softly.assertThat(changedSenderAcc.getBalance())
+                .isCloseTo(makeDepositRequest.getBalance() - transferRequest.getAmount(), offset(0.01));
+        softly.assertThat(changedReceiverAcc.getBalance())
+                .isCloseTo(transferRequest.getAmount(), offset(0.01));
 
+
+        // БД-проверка появившихся в истории транзакций
+        TransactionDao transactionDao = DataBaseSteps.getTransferByAccountId(transferRequest.getReceiverAccountId());
+        DaoAndModelAssertions.assertThat(transferResponse, transactionDao).match();
+
+        TransactionDao transactionInDao = DataBaseSteps.getTransferById(targetInTransaction.getId());
+        softly.assertThat(transactionInDao.getType()).isEqualTo(TransactionType.TRANSFER_IN.toString());
+        TransactionDao transactionOutDao = DataBaseSteps.getTransferById(targetOutTransaction.getId());
+        softly.assertThat(transactionOutDao.getType()).isEqualTo(TransactionType.TRANSFER_OUT.toString());
+
+        // БД-проверка, что баланс двух счетов такой, какой ожидаем
+        AccountDao senderAccDao = DataBaseSteps.getAccountByAccountId(senderAccount.getId());
+        AccountDao receiverAccDao = DataBaseSteps.getAccountByAccountId(receiverAccount.getId());
+
+        softly.assertThat(senderAccDao.getBalance())
+                .isCloseTo(makeDepositRequest.getBalance() - transferRequest.getAmount(), offset(0.01));
+        softly.assertThat(receiverAccDao.getBalance())
+                .isCloseTo(transferRequest.getAmount(), offset(0.01));
     }
 
     @Tag("POSITIVE")
@@ -117,6 +145,17 @@ public class TransferTest extends BaseTest {
         softly.assertThat(targetDepositTransaction.getType()).isEqualTo(String.valueOf(TransactionType.DEPOSIT));
         softly.assertThat(targetOutTransaction.getType()).isEqualTo(String.valueOf(TransactionType.TRANSFER_OUT));
 
+
+        // БД-проверка количества появившихся в истории транзакций, можно ещё добавить, как в пред.тесте - на соотв-ие amount
+        List<TransactionDao> transactionsList = DBRequest.builder()
+                .requestType(DBRequest.RequestType.SELECT_OR)
+                .table(DataBaseSteps.DBTables.TRANSACTIONS.getName())
+                .where(Condition.equalTo(DataBaseSteps.DBTables.TRANSACTIONS_RELATED_ACC_ID.getName(), senderAccount.getId()))
+                .where(Condition.equalTo(DataBaseSteps.DBTables.TRANSACTIONS_RELATED_ACC_ID.getName(), receiverAccount.getId()))
+                .where(Condition.equalTo(DataBaseSteps.DBTables.TRANSACTIONS_ACC_ID.getName(), senderAccount.getId()))
+                .where(Condition.equalTo(DataBaseSteps.DBTables.TRANSACTIONS_ACC_ID.getName(), receiverAccount.getId()))
+                .extractAsList(TransactionDao.class);
+        softly.assertThat(transactionsList.size()).isEqualTo(3);
     }
 
     @Tag("POSITIVE")
@@ -181,8 +220,27 @@ public class TransferTest extends BaseTest {
                 .orElseThrow(() -> new AssertionError("Transaction with id %d not found".formatted(receiverAccount.getId())));
 
 
-        softly.assertThat(changedSenderAcc.getBalance()).isEqualTo(makeDepositRequest.getBalance() - transferRequest.getAmount());
-        softly.assertThat(changedReceiverAcc.getBalance()).isEqualTo(transferRequest.getAmount());
+        softly.assertThat(changedSenderAcc.getBalance()).isCloseTo(makeDepositRequest.getBalance() - transferRequest.getAmount(), offset(0.01));
+        softly.assertThat(changedReceiverAcc.getBalance()).isCloseTo(transferRequest.getAmount(), offset(0.01));
+
+
+        // БД-проверка появившихся в истории транзакций
+        TransactionDao transactionDao = DataBaseSteps.getTransferByAccountId(transferRequest.getReceiverAccountId());
+        DaoAndModelAssertions.assertThat(transferResponse, transactionDao).match();
+
+        TransactionDao transactionInDao = DataBaseSteps.getTransferById(targetInTransaction.getId());
+        softly.assertThat(transactionInDao.getType()).isEqualTo(TransactionType.TRANSFER_IN.toString());
+        TransactionDao transactionOutDao = DataBaseSteps.getTransferById(targetOutTransaction.getId());
+        softly.assertThat(transactionOutDao.getType()).isEqualTo(TransactionType.TRANSFER_OUT.toString());
+
+        // БД-проверка, что баланс двух счетов такой, какой ожидаем
+        AccountDao senderAccDao = DataBaseSteps.getAccountByAccountId(senderAccount.getId());
+        AccountDao receiverAccDao = DataBaseSteps.getAccountByAccountId(receiverAccount.getId());
+
+        softly.assertThat(senderAccDao.getBalance())
+                .isCloseTo(makeDepositRequest.getBalance() - transferRequest.getAmount(), offset(0.01));
+        softly.assertThat(receiverAccDao.getBalance())
+                .isCloseTo(transferRequest.getAmount(), offset(0.01));
 
     }
 
@@ -217,8 +275,16 @@ public class TransferTest extends BaseTest {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Transaction with id %d not found".formatted(receiverAccount.getId())));
 
-        softly.assertThat(changedSenderAcc.getBalance()).isEqualTo(makeDepositRequest.getBalance());
+        softly.assertThat(changedSenderAcc.getBalance()).isCloseTo(makeDepositRequest.getBalance(), offset(0.01));
         softly.assertThat(changedReceiverAcc.getBalance()).isEqualTo(0.0);
+
+
+        // БД-проверка, что баланс обоих счетов не поменялся
+        AccountDao senAccountDao = DataBaseSteps.getAccountByAccountNumber(senderAccount.getAccountNumber());
+        DaoAndModelAssertions.assertThat(changedSenderAcc, senAccountDao).match();
+        AccountDao recAccountDao = DataBaseSteps.getAccountByAccountNumber(receiverAccount.getAccountNumber());
+        DaoAndModelAssertions.assertThat(changedReceiverAcc, recAccountDao).match();
+
     }
 
     @Tag("POSITIVE")
@@ -256,8 +322,18 @@ public class TransferTest extends BaseTest {
                 .orElseThrow(() -> new AssertionError("Transaction with id %d not found".formatted(receiverAccount.getId())));
 
 
-        softly.assertThat(changedSenderAcc.getBalance()).isEqualTo(makeDepositRequest.getBalance() * 2 - transferRequest.getAmount());
-        softly.assertThat(changedReceiverAcc.getBalance()).isEqualTo(transferRequest.getAmount());
+        softly.assertThat(changedSenderAcc.getBalance()).isCloseTo(makeDepositRequest.getBalance() * 2 - transferRequest.getAmount(), offset(0.01));
+        softly.assertThat(changedReceiverAcc.getBalance()).isCloseTo(transferRequest.getAmount(), offset(0.01));
+
+
+        // БД-проверка, что баланс двух счетов такой, какой ожидаем
+        AccountDao senderAccDao = DataBaseSteps.getAccountByAccountId(senderAccount.getId());
+        AccountDao receiverAccDao = DataBaseSteps.getAccountByAccountId(receiverAccount.getId());
+
+        softly.assertThat(senderAccDao.getBalance())
+                .isCloseTo(makeDepositRequest.getBalance() * 2 - transferRequest.getAmount(), offset(0.01));
+        softly.assertThat(receiverAccDao.getBalance())
+                .isCloseTo(transferRequest.getAmount(), offset(0.01));
     }
 
     @Tag("NEGATIVE")
@@ -292,9 +368,15 @@ public class TransferTest extends BaseTest {
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("Transaction with id %d not found".formatted(receiverAccount.getId())));
 
-        softly.assertThat(changedSenderAcc.getBalance()).isEqualTo(makeDepositRequest.getBalance());
+        softly.assertThat(changedSenderAcc.getBalance()).isCloseTo(makeDepositRequest.getBalance(), offset(0.01));
         softly.assertThat(changedReceiverAcc.getBalance()).isEqualTo(0.0);
 
+
+        // БД-проверка, что баланс обоих счетов не поменялся
+        AccountDao senAccountDao = DataBaseSteps.getAccountByAccountNumber(senderAccount.getAccountNumber());
+        DaoAndModelAssertions.assertThat(changedSenderAcc, senAccountDao).match();
+        AccountDao recAccountDao = DataBaseSteps.getAccountByAccountNumber(receiverAccount.getAccountNumber());
+        DaoAndModelAssertions.assertThat(changedReceiverAcc, recAccountDao).match();
     }
 
     public static Stream<Arguments> validTransferAmounts() {
@@ -308,10 +390,10 @@ public class TransferTest extends BaseTest {
 
     public static Stream<Arguments> invalidTransferAmounts() {
         return Stream.of(
-                Arguments.of(0.0, ErrorText.smallTransferAmountError.getTitle()),
-                Arguments.of(-100.0, ErrorText.smallTransferAmountError.getTitle()),
+                Arguments.of(0.0, ErrorText.invalidTransferError.getTitle()),
+                Arguments.of(-100.0, ErrorText.invalidTransferError.getTitle()),
                 Arguments.of(10000.01, ErrorText.hugeTransferAmountError.getTitle()),
-                Arguments.of(-0.1, ErrorText.smallTransferAmountError.getTitle())
+                Arguments.of(-0.1, ErrorText.invalidTransferError.getTitle())
         );
     }
 }
