@@ -1,5 +1,6 @@
 package iteration1.api;
 
+import api.configs.Config;
 import api.enums.ErrorText;
 import api.enums.UserRole;
 import api.generators.RandomData;
@@ -14,6 +15,7 @@ import api.specs.ResponseSpecs;
 import base.BaseTest;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -38,6 +40,25 @@ public class CreateUserTest extends BaseTest {
 
         softly.assertThat(createUserRequest.getPassword()).isNotEqualTo(createUserResponse.getPassword());
         ModelAssertions.assertThatModel(createUserRequest, createUserResponse).match();
+    }
+
+    @Tag("NEGATIVE")
+    @Test
+    public void adminCanNotCreateUserWithExistingUsername() {
+        CreateUserRequest createUserRequest = CreateUserRequest.builder()
+                .username(Config.getProperty("admin.username"))
+                .password(RandomData.qeneratePassword())
+                .role(String.valueOf(UserRole.USER))
+                .build();
+
+        String response = new CrudRequester(
+                RequestSpecs.adminSpec(),
+                Endpoint.ADMIN_CREATE_USER,
+                ResponseSpecs.badRequest())
+                .post(createUserRequest)
+                .extract().body().asString();
+
+        softly.assertThat(response).isEqualTo("Error: Username '" + Config.getProperty("admin.username") + "' already exists.");
     }
 
     @Tag("NEGATIVE")
@@ -115,7 +136,6 @@ public class CreateUserTest extends BaseTest {
 
     public static Stream<Arguments> usernameInvalidData() {
         return Stream.of(
-                Arguments.of("admin", "Pass9Sym$", String.valueOf(UserRole.USER), "username", "Username 'admin' already exists"), //здесь нужен отдельный тест, т.к. ошибка не в JSON приходит
                 Arguments.of("", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.blankUsernameError.getTitle()),
                 Arguments.of("   ", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.blankUsernameError.getTitle()),
                 Arguments.of("ab", "Test12345$", String.valueOf(UserRole.USER), "username", ErrorText.usernameLengthError.getTitle()),
