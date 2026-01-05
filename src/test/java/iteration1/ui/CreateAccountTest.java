@@ -17,16 +17,17 @@ public class CreateAccountTest extends BaseUiTest {
 
     @Tag("POSITIVE")
     @Test
+    @Tag("ui")
 //    @Browsers({"firefox", "opera", "safari"})
     @UserSession
     public void userCanCreateAccountTest() {
 
-        new UserDashboard().open().createNewAccount();
+        new UserDashboard().open().createNewAccount(BankAlert.ACCOUNT_CREATED.getMessage());
 
         List<AccountModel> createdAccs = SessionStorage.getSteps().getAllAccounts();
         assertThat(createdAccs).hasSize(1);
 
-        new UserDashboard().checkAlertAndAccept(BankAlert.ACCOUNT_CREATED.getMessage() + createdAccs.getFirst().getAccountNumber());
+        new UserDashboard().checkAlertAndAccept(BankAlert.ACCOUNT_CREATED.getMessage() + " " + createdAccs.getFirst().getAccountNumber());
         assertThat(createdAccs.getFirst().getBalance()).isZero();
 
     }

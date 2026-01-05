@@ -21,6 +21,7 @@ public class CreateAccountTest extends BaseTest {
 
     @Tag("POSITIVE")
     @Test
+    @Tag("api")
     public void authorizedUserCanSeeHisAccounts() {
         CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
@@ -41,6 +42,7 @@ public class CreateAccountTest extends BaseTest {
 
     @Tag("POSITIVE")
     @Test
+    @Tag("api")
     public void authorizedUserCanCreateAccount() {
         CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
