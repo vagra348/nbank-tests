@@ -23,6 +23,7 @@ public class DepositTest extends BaseTest {
     @Tag("POSITIVE")
     @MethodSource("validDepositAmounts")
     @ParameterizedTest
+    @Tag("api")
     public void authorizedUserCanMakeDepositWithValidAmountsTest(double amount) {
         CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
@@ -44,6 +45,7 @@ public class DepositTest extends BaseTest {
     @Tag("NEGATIVE")
     @MethodSource("invalidDepositAmounts")
     @ParameterizedTest
+    @Tag("api")
     public void authorizedUserCanNotMakeDepositWithInvalidAmountsTest(double amount, String errorValue) {
         CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
@@ -63,6 +65,7 @@ public class DepositTest extends BaseTest {
 
     @Tag("NEGATIVE")
     @Test
+    @Tag("api")
     public void authorizedUserCanNotMakeDepositToOtherUserAccountTest() {
         CreateUserRequest user1Request = AdminSteps.createNewUser(this);
 
@@ -85,6 +88,7 @@ public class DepositTest extends BaseTest {
 
     @Tag("NEGATIVE")
     @Test
+    @Tag("api")
     public void authorizedUserCanNotMakeDepositToNonExistAccountTest() {
         CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 

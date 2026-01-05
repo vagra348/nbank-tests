@@ -20,6 +20,7 @@ public class TransferTest extends BaseTest {
 
     @Tag("POSITIVE")
     @Test
+    @Tag("api")
     public void authorizedUserCanTransferBetweenOwnAccountsTest() {
         CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
@@ -81,6 +82,7 @@ public class TransferTest extends BaseTest {
 
     @Tag("POSITIVE")
     @Test
+    @Tag("api")
     public void authorizedUserCanSeeTransactionsTest() {
         CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
@@ -119,6 +121,7 @@ public class TransferTest extends BaseTest {
 
     @Tag("POSITIVE")
     @Test
+    @Tag("api")
     public void authorizedUserCanTransferToOtherUserAccountTest() {
         CreateUserRequest user1Request = AdminSteps.createNewUser(this);
 
@@ -185,6 +188,7 @@ public class TransferTest extends BaseTest {
 
     @Tag("NEGATIVE")
     @Test
+    @Tag("api")
     public void authorizedUserCanNotTransferMoreThanBalanceTest() {
         CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
@@ -220,6 +224,7 @@ public class TransferTest extends BaseTest {
     @Tag("POSITIVE")
     @MethodSource("validTransferAmounts")
     @ParameterizedTest
+    @Tag("api")
     public void authorizedUserCanTransferWithValidAmountsTest(double depositAmount, double transferAmount) {
         CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
@@ -258,6 +263,7 @@ public class TransferTest extends BaseTest {
     @Tag("NEGATIVE")
     @MethodSource("invalidTransferAmounts")
     @ParameterizedTest
+    @Tag("api")
     public void authorizedUserCanNotTransferWithInvalidAmountsTest(double amount, String errorValue) {
         CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 

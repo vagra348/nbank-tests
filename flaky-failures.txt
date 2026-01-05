@@ -1,0 +1,261 @@
+=========================================================
+// Краткая выжимка:
+=========================================================
+|Тест____________________________________________|Проблема_____________________________________________________________________________________________|Решение___________________________________________________________________________________________________________________|
+|[api]adminCanNotCreateUserWithInvalidUsername...|Вид ответа от сервера был разный (обычный текст и JSON)..............................................|Разделила на обычный тест и параметризованный.............................................................................|
+|[ui]adminCanLoginWithCorrectDataTest............|Возникающий алерт - либо логин на сайт, либо предупреждение о небезопасном пароле....................|Добавила очистку cookie и localStorage после каждого теста в BaseUiTest...................................................|
+|[ui]userCanChangeNameWithValidDataTest..........|Не успевало вставляться новое имя в инпут, фронт не успевал подгрузиться для проверки Welcome-text...|Добавила методы из RetryUtils в EditProfilePage и UserDashboard, исправила checkAlertAndAccept............................|
+|[ui]userCanCreateAccountTest....................|Не совпадали ожидаемый и реальный тексты алерта и не успевала нажиматься кнопка......................|Добавила символ пробела в ожидаемый текст и ретрай в клик. На будущее: реализовать сравнение, игнорируя пробельные символы|
+|[ui]adminCanCreateUserTest......................|Поиск юзербейджа происходил раньше, чем он появлялся на странице.....................................|Добавила ретрай (аналогично решению из видео).............................................................................|
+- WebDriverException: unknown error: unhandled inspector error: {"code":-32000,"message":"Not attached to an active page"} - не смогла починить :(
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+Более подробно:
+=========================================================
+// 1. Прогоны api-тестов, падения:
+=========================================================
+
+- единственное падение 3 прогона подряд:
+
+----------------------------1-----------------------------
+
+[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 19.14 s -- in iteration2.api.TransferTest
+[ERROR] Failures:
+[ERROR]   CreateUserTest>BaseTest.afterTest:34
+Expecting actual:  "Error: Username 'admin' already exists."
+to contain:  "username" at CreateUserTest.adminCanNotCreateUserWithInvalidUsername(CreateUserTest.java:60)
+[ERROR] Tests run: 87, Failures: 1, Errors: 0, Skipped: 0
+
+----------------------------2-----------------------------
+
+[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 20.36 s -- in iteration2.api.TransferTest
+[ERROR] Failures:
+[ERROR]   CreateUserTest>BaseTest.afterTest:34
+Expecting actual:  "Error: Username 'admin' already exists."
+to contain:  "username" at CreateUserTest.adminCanNotCreateUserWithInvalidUsername(CreateUserTest.java:60)
+[ERROR] Tests run: 87, Failures: 1, Errors: 0, Skipped: 0
+
+----------------------------3-----------------------------
+
+[INFO] Tests run: 12, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 16.28 s -- in iteration2.api.TransferTest
+[ERROR] Failures:
+[ERROR]   CreateUserTest>BaseTest.afterTest:34
+Expecting actual:  "Error: Username 'admin' already exists."
+to contain:  "username" at CreateUserTest.adminCanNotCreateUserWithInvalidUsername(CreateUserTest.java:60)
+[ERROR] Tests run: 87, Failures: 1, Errors: 0, Skipped: 0
+
+----------------------------------------------------------
+
+✔ adminCanNotCreateUserWithInvalidUsername
+ - проблема: вид ответа от сервера был разный - обычным текстом и в json-е
+ - починила разделением на обычный тест и параметризованный, но надо связываться с разработчиками
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+=========================================================
+// 2. Прогоны ui-тестов, падения:
+=========================================================
+
+----------------------------1-----------------------------
+
+упали 3 теста: userCanChangeNameWithValidDataTest, adminCanLoginWithCorrectDataTest, userCanMakeDepositWithValidAmountTest
+
+- [ERROR] Tests run: 2, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 81.76 s <<< FAILURE! -- in iteration2.ui.ChangeNameTest
+[ERROR] iteration2.ui.ChangeNameTest.userCanChangeNameWithValidDataTest -- Time elapsed: 24.92 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <noname> but was: <mGPwZ ILszA>
+...
+at iteration2.ui.ChangeNameTest.userCanChangeNameWithValidDataTest(ChangeNameTest.java:31)
+
+- [ERROR] Tests run: 3, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 18.02 s <<< FAILURE! -- in iteration1.ui.LoginUserTest
+[ERROR] iteration1.ui.LoginUserTest.adminCanLoginWithCorrectDataTest -- Time elapsed: 12.20 s <<< FAILURE!
+Element not found {by text: Admin Panel}
+Expected: visible
+Timeout: 8 s.
+Caused by: NoSuchElementException: no such element: Unable to locate element: {"method":"xpath","selector":".//*/text()[normalize-space(translate(string(.), '
+
+- [ERROR] Tests run: 3, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 96.64 s <<< FAILURE! -- in iteration2.ui.DepositTest
+[ERROR] iteration2.ui.DepositTest.userCanMakeDepositWithValidAmountTest -- Time elapsed: 51.25 s <<< ERROR!
+org.openqa.selenium.TimeoutException:
+timeout: Timed out receiving message from renderer: 8.850
+
+----------------------------2-----------------------------
+
+упали 2 теста: userCanChangeNameWithValidDataTest, userCanCreateAccountTest
+
+- [ERROR] Tests run: 1, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 34.78 s <<< FAILURE! -- in iteration1.ui.CreateAccountTest
+[ERROR] iteration1.ui.CreateAccountTest.userCanCreateAccountTest -- Time elapsed: 34.62 s <<< FAILURE!
+java.lang.AssertionError:
+Expected size: 1 but was: 0 in:
+[]
+at iteration1.ui.CreateAccountTest.userCanCreateAccountTest(CreateAccountTest.java:27)
+
+- [ERROR] Tests run: 2, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 12.79 s <<< FAILURE! -- in iteration2.ui.ChangeNameTest
+[ERROR] iteration2.ui.ChangeNameTest.userCanChangeNameWithValidDataTest -- Time elapsed: 7.194 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <noname> but was: <RTDcP bihvZ>
+...
+at iteration2.ui.ChangeNameTest.userCanChangeNameWithValidDataTest(ChangeNameTest.java:31)
+
+----------------------------3-----------------------------
+
+упали 3 теста: userCanTransferBetweenOwnAccountsTest, userCanNotMakeDepositWithoutEnteredSumTest, userCanChangeNameWithValidDataTest
+
+- [ERROR] Tests run: 3, Failures: 0, Errors: 2, Skipped: 0, Time elapsed: 8.099 s <<< FAILURE! -- in iteration2.ui.TransferTest
+[ERROR] iteration2.ui.TransferTest.userCanTransferBetweenOwnAccountsTest -- Time elapsed: 0.712 s <<< ERROR!
+org.openqa.selenium.WebDriverException:
+unknown error: unhandled inspector error: {"code":-32000,"message":"Not attached to an active page"}
+
+- [ERROR] Tests run: 3, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 23.17 s <<< FAILURE! -- in iteration2.ui.DepositTest
+[ERROR] iteration2.ui.DepositTest.userCanNotMakeDepositWithoutEnteredSumTest -- Time elapsed: 0.525 s <<< ERROR!
+org.openqa.selenium.UnhandledAlertException:
+unexpected alert open: {Alert text : Unauthorized! Please log in again.}
+
+- [ERROR] Tests run: 2, Failures: 1, Errors: 0, Skipped: 0, Time elapsed: 11.43 s <<< FAILURE! -- in iteration2.ui.ChangeNameTest
+[ERROR] iteration2.ui.ChangeNameTest.userCanChangeNameWithValidDataTest -- Time elapsed: 5.856 s <<< FAILURE!
+org.opentest4j.AssertionFailedError: expected: <noname> but was: <aAiIn JEKcB>
+...
+at iteration2.ui.ChangeNameTest.userCanChangeNameWithValidDataTest(ChangeNameTest.java:31)
+
+---------------------------------------------------------
+
+Flaky-ui:
+✔ adminCanLoginWithCorrectDataTest
+ - проблема: возникающий алерт - либо логин на сайт, либо предупреждение о небезопасном пароле
+ - починила очисткой cookie и localStorage после каждого теста в BaseUiTest, но наверняка
+   в будущем понадобится решение для принудительного отключения алертов, хотя это сложно совмещать
+   с другими алертами, например, об успешном внесении депозита
+✔ userCanChangeNameWithValidDataTest
+ - проблема: не успевало вставляться в инпут новое имя и слишком быстро проверялся Welcome-text, фронт не успевал подгрузиться
+ - починила добавлением методов из RetryUtils в EditProfilePage и в UserDashboard, исправлением checkAlertAndAccept
+✔ userCanCreateAccountTest
+ - проблема: не совпадали ожидаемый и реальный тексты алерта (странно, что он до этого проходил вообще) и иногда апи-запрос
+   возвращал пустой список (кнопка создания счёта не успевала нажиматься)
+ - починила добавлением символа пробела (доработка на будущее - реализовать сравнение, выкидывая любые пробельные символы)
+   и добавлением ретрая
+
+ ---------------------------------------------------------
+
+Прогнала все апи-тесты и LoginUserTest и ChangeNameTest 10 раз, на данный момент всё супер:
+ [INFO] Results:
+ [INFO] Tests run: 93, Failures: 0, Errors: 0, Skipped: 0
+ [INFO] ------------------------------------------------------------------------
+ [INFO] BUILD SUCCESS
+ [INFO] ------------------------------------------------------------------------
+ [INFO] Total time:  01:26 min
+ [INFO] ------------------------------------------------------------------------
+
+---------------------------------------------------------
+
+□ userCanMakeDepositWithValidAmountTest
+ - проблема: timeout: Timed out receiving message from renderer: 8.850
+ - прогнала 10 раз этот тест, не повторилось, как будто сервис моргнул, буду следить за ним ещё
+□ userCanNotMakeDepositWithoutEnteredSumTest
+ - проблема: unexpected alert open: {Alert text : Unauthorized! Please log in again.}
+ - тоже как будто сервис моргнул
+□ userCanTransferBetweenOwnAccountsTest
+ - проблема: unknown error: unhandled inspector error: {"code":-32000,"message":"Not attached to an active page"}
+ - тоже как будто сервис моргнул
+
+свежий прогон (тесты падают только при общем прогоне, отдельно - нет):
+
+[INFO] Results:
+[INFO]
+[ERROR] Failures:
+[ERROR]   CreateUserTest.adminCanCreateUserTest:28 expected: <true> but was: <false>
+[ERROR] Errors:
+[ERROR]   DepositTest.userCanNotMakeDepositWithoutEnteredSumTest ╗ UnhandledAlert unexpected alert open: {Alert text : Unauthorized! Please log in again.}
+[ERROR]   TransferTest.userCanTransferBetweenOwnAccountsTest ╗ UnhandledAlert unexpected alert open: {Alert text : ? Unable to fetch transactions. Please try again.}
+[INFO]
+[ERROR] Tests run: 101, Failures: 1, Errors: 2, Skipped: 0
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  01:59 min
+[INFO] ------------------------------------------------------------------------
+
+после долгих попыток закрывать из ниоткуда появляющийся алерт Unauthorized! и проб всего, что только можно, выяснила,
+что проблема в добавленном Selenide.refresh() в @AfterEach, убрала, оставила только очистку кук и локального хранилища.
+
+[INFO] Results:
+[INFO]
+[ERROR] Failures:
+[ERROR]   CreateUserTest.adminCanCreateUserTest:28 expected: <true> but was: <false>
+[INFO]
+[ERROR] Tests run: 101, Failures: 1, Errors: 0, Skipped: 0
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  02:34 min
+[INFO] ------------------------------------------------------------------------
+
+✔ adminCanCreateUserTest - починила так же, как в видео
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+===============================================================================
+// Последнее:
+===============================================================================
+
+прогнала 10 раз, либо абсолютно всё зелёное, либо несколько тестов сразу валятся из-за
+WebDriverException: unknown error: unhandled inspector error: {"code":-32000,"message":"Not attached to an active page"}
+и я не могу это отследить - либо проблема в непереключении с алертов обратно на страницу, либо слишком быстро ищутся элементы,
+но тогда как будто вообще абсолютно на всё нужно ставить задержку, чтобы драйвер не гнал впереди паровоза...
+вообще не представляю, как тут поступить.
+если проблема с алертами, то как оборачивать тесты закрытием нежелательных алертов, если мы в самих тестах проверяем алерты?
+делать какие-то сложные конструкции типа "если текст алерта не в списке допустимых, то закрой его"?
+
+вот пример такого множественного падения:
+
+[INFO] Results:
+[INFO]
+[ERROR] Failures:
+[ERROR]   LoginUserTest.adminCanLoginWithCorrectDataTest:25 WebDriverException: unknown error: unhandled inspector error: {"code":-32000,"message":"Not attached to an active page"}
+Page source: file:/C:/Users/user/IdeaProjects/nbank-tests/build/reports/tests/1767127848610.0.html
+Timeout: 8 s.
+Caused by: WebDriverException: unknown error: unhandled inspector error: {"code":-32000,"message":"Not attached to an active page"}
+[ERROR] Errors:
+
+[ERROR]   ChangeNameTest.userCanChangeNameWithValidDataTest ╗ WebDriver unknown error: unhandled inspector error: {"code":-32000,"message":"Not attached to an active page"}
+...
+[ERROR]   ChangeNameTest.userCanNotChangeNameWithInvalidDataTest ╗ WebDriver unknown error: unhandled inspector error: {"code":-32000,"message":"Not attached to an active page"}
+...
+[ERROR]   DepositTest.userCanMakeDepositWithValidAmountTest ╗ WebDriver unknown error: unhandled inspector error: {"code":-32000,"message":"Not attached to an active page"}
+...
+[ERROR]   DepositTest.userCanNotMakeDepositWithInvalidAmountTest ╗ WebDriver unknown error: unhandled inspector error: {"code":-32000,"message":"Not attached to an active page"}
+...
+[ERROR]   DepositTest.userCanNotMakeDepositWithoutEnteredSumTest ╗ WebDriver unknown error: unhandled inspector error: {"code":-32000,"message":"Not attached to an active page"}
+...
+[ERROR]   TransferTest.userCanNotTransferMoreThanBalanceTest ╗ WebDriver unknown error: unhandled inspector error: {"code":-32000,"message":"Not attached to an active page"}
+...
+[ERROR]   TransferTest.userCanNotTransferWithoutEnteredSumTest ╗ WebDriver unknown error: unhandled inspector error: {"code":-32000,"message":"Not attached to an active page"}
+...
+[ERROR]   TransferTest.userCanTransferBetweenOwnAccountsTest ╗ WebDriver unknown error: unhandled inspector error: {"code":-32000,"message":"Not attached to an active page"}
+...
+[INFO]
+[ERROR] Tests run: 101, Failures: 1, Errors: 8, Skipped: 0
+[INFO]
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------

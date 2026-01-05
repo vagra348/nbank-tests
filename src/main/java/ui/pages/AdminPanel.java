@@ -3,6 +3,7 @@ package ui.pages;
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.Selectors;
 import com.codeborne.selenide.SelenideElement;
+import common.utils.RetryUtils;
 import lombok.Getter;
 import ui.elements.UserBadge;
 
@@ -25,6 +26,15 @@ public class AdminPanel extends BasePage<AdminPanel> {
         passInput.sendKeys(password);
         addUserBtn.click();
         return this;
+    }
+
+    public UserBadge findUserByUsername(String username) {
+        return RetryUtils.retry(
+                () -> getAllUsers().stream().filter(it -> it.getUsername().equals(username)).findAny().orElse(null),
+                result -> result != null,
+                3,
+                1000
+        );
     }
 
     @Override
