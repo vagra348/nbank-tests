@@ -18,6 +18,7 @@ public class LoginUserTest extends BaseUiTest {
 
     @Tag("POSITIVE")
     @Test
+    @Tag("ui")
     public void adminCanLoginWithCorrectDataTest() {
         CreateUserRequest admin = CreateUserRequest.getAdmin();
 
@@ -30,6 +31,7 @@ public class LoginUserTest extends BaseUiTest {
 
     @Tag("POSITIVE")
     @Test
+    @Tag("ui")
     public void userCanLoginWithCorrectDataTest() {
         CreateUserRequest user = AdminSteps.createNewUser(this);
 
@@ -43,6 +45,7 @@ public class LoginUserTest extends BaseUiTest {
 
     @Tag("NEGATIVE")
     @Test
+    @Tag("ui")
     public void userCanNotLoginWithIncorrectDataTest() {
         new LoginPage().open()
                 .login("nonExistUser","somePass1$");

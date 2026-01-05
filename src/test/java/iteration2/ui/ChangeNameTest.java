@@ -20,6 +20,7 @@ public class ChangeNameTest extends BaseUiTest {
 
     @Tag("POSITIVE")
     @Test
+    @Tag("ui")
     @UserSession
     public void userCanChangeNameWithValidDataTest() throws InterruptedException {
         String newName = RandomData.qenerateName();
@@ -37,6 +38,7 @@ public class ChangeNameTest extends BaseUiTest {
 
     @Tag("NEGATIVE")
     @Test
+    @Tag("ui")
     @UserSession
     public void userCanNotChangeNameWithInvalidDataTest() {
         new UserDashboard().open().getUserNameProfile().click();

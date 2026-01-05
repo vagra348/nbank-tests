@@ -17,6 +17,7 @@ public class LoginUserTest extends BaseTest {
 
     @Test
     @Tag("POSITIVE")
+    @Tag("api")
     public void adminCanGenerateAuthTokenTest() {
         LoginUserRequest loginUserRequest = LoginUserRequest.builder()
                 .username("admin")
@@ -33,6 +34,7 @@ public class LoginUserTest extends BaseTest {
 
     @Test
     @Tag("POSITIVE")
+    @Tag("api")
     public void userCanGenerateAuthTokenTest() {
         CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
@@ -55,6 +57,7 @@ public class LoginUserTest extends BaseTest {
 
     @Test
     @Tag("POSITIVE")
+    @Tag("api")
     public void authorizedAdminCanSeeUsersListTest() {
         CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
@@ -69,6 +72,7 @@ public class LoginUserTest extends BaseTest {
 
     @Test
     @Tag("NEGATIVE")
+    @Tag("api")
     public void nonExistLoginTest() {
         LoginUserRequest loginUserRequest = LoginUserRequest.builder()
                 .username("userThatDoesNotExist")
@@ -84,6 +88,7 @@ public class LoginUserTest extends BaseTest {
 
     @Test
     @Tag("NEGATIVE")
+    @Tag("api")
     public void incorrectPasswordTest() {
         LoginUserRequest loginUserRequest = LoginUserRequest.builder()
                 .username("admin")

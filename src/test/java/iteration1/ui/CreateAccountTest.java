@@ -17,6 +17,7 @@ public class CreateAccountTest extends BaseUiTest {
 
     @Tag("POSITIVE")
     @Test
+    @Tag("ui")
 //    @Browsers({"firefox", "opera", "safari"})
     @UserSession
     public void userCanCreateAccountTest() {
