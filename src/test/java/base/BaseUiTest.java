@@ -2,9 +2,11 @@ package base;
 
 import api.configs.Config;
 import com.codeborne.selenide.Configuration;
+import com.codeborne.selenide.Selenide;
 import common.extensions.AdminSessionExtension;
 import common.extensions.BrowserMatcExtension;
 import common.extensions.UserSessionExtension;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -17,7 +19,7 @@ import static com.codeborne.selenide.Configuration.timeout;
 @ExtendWith(UserSessionExtension.class)
 public class BaseUiTest extends BaseTest {
     @BeforeAll
-    public static void setupSelenoid(){
+    public static void setupSelenoid() {
         Configuration.remote = Config.getProperty("uiRemote");
         Configuration.baseUrl = Config.getProperty("uiBaseUrl");
         Configuration.browser = Config.getProperty("browser");
@@ -30,4 +32,10 @@ public class BaseUiTest extends BaseTest {
         );
     }
 
+
+    @AfterEach
+    public void clearBrowser() {
+        Selenide.clearBrowserCookies();
+        Selenide.clearBrowserLocalStorage();
+    }
 }

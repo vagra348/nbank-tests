@@ -31,7 +31,10 @@ public abstract class BasePage<T extends BasePage> {
 
     public T checkAlertAndAccept(String bankAlert) {
         Alert alert = switchTo().alert();
-        assertThat(alert.getText().contains(bankAlert));
+        assertThat(alert.getText())
+                .as("Alert text mismatch. Expected to contain: '%s', but was: '%s'",
+                        bankAlert, alert.getText())
+                .contains(bankAlert);
         alert.accept();
         return (T) this;
     }
