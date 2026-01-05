@@ -1,6 +1,10 @@
 package iteration1.api;
 
 import api.configs.Config;
+import api.dao.UserDao;
+import api.dao.comparison.DaoAndModelAssertions;
+import api.database.Condition;
+import api.database.DBRequest;
 import api.enums.ErrorText;
 import api.enums.UserRole;
 import api.generators.RandomData;
@@ -10,6 +14,7 @@ import api.models.comparison.ModelAssertions;
 import api.requests.skelethon.Endpoint;
 import api.requests.skelethon.requesters.CrudRequester;
 import api.requests.steps.AdminSteps;
+import api.requests.steps.DataBaseSteps;
 import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
 import base.BaseTest;
@@ -20,7 +25,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+import java.util.List;
 import java.util.stream.Stream;
+
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class CreateUserTest extends BaseTest {
 
@@ -41,6 +49,9 @@ public class CreateUserTest extends BaseTest {
 
         softly.assertThat(createUserRequest.getPassword()).isNotEqualTo(createUserResponse.getPassword());
         ModelAssertions.assertThatModel(createUserRequest, createUserResponse).match();
+
+        UserDao userDao = DataBaseSteps.getUserByUsername(createUserRequest.getUsername());
+        DaoAndModelAssertions.assertThat(createUserResponse, userDao).match();
     }
 
     @Tag("NEGATIVE")
@@ -61,6 +72,14 @@ public class CreateUserTest extends BaseTest {
                 .extract().body().asString();
 
         softly.assertThat(response).isEqualTo("Error: Username '" + Config.getProperty("admin.username") + "' already exists.");
+
+        // БД-проверка количества admin-ов
+        List<UserDao> userDaos = DBRequest.builder()
+                .requestType(DBRequest.RequestType.SELECT_AND)
+                .table(DataBaseSteps.DBTables.CUSTOMERS.getName())
+                .where(Condition.equalTo(DataBaseSteps.DBTables.CUSTOMERS_USERNAME.getName(), Config.getProperty("admin.username")))
+                .extractAsList(UserDao.class);
+        softly.assertThat(userDaos.size()).isEqualTo(1);
     }
 
     @Tag("NEGATIVE")
@@ -83,6 +102,8 @@ public class CreateUserTest extends BaseTest {
 
         softly.assertThat(response).contains(errorKey);
         softly.assertThat(response).contains(errorValue);
+
+        assertNull(DataBaseSteps.getUserByUsername(createUserRequest.getUsername()));
     }
 
     @Tag("NEGATIVE")
@@ -105,6 +126,8 @@ public class CreateUserTest extends BaseTest {
 
         softly.assertThat(response).contains(errorKey);
         softly.assertThat(response).contains(errorValue);
+
+        assertNull(DataBaseSteps.getUserByUsername(createUserRequest.getUsername()));
     }
 
     @Tag("NEGATIVE")
@@ -128,6 +151,7 @@ public class CreateUserTest extends BaseTest {
         softly.assertThat(response).contains(errorKey);
         softly.assertThat(response).contains(errorValue);
 
+        assertNull(DataBaseSteps.getUserByUsername(createUserRequest.getUsername()));
     }
 
 

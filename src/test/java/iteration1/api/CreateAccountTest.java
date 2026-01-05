@@ -1,11 +1,14 @@
 package iteration1.api;
 
+import api.dao.AccountDao;
+import api.dao.comparison.DaoAndModelAssertions;
 import api.models.AccountModel;
 import api.models.CreateUserRequest;
 import api.requests.skelethon.Endpoint;
 import api.requests.skelethon.requesters.CrudRequester;
 import api.requests.skelethon.requesters.ValidatedCrudRequester;
 import api.requests.steps.AdminSteps;
+import api.requests.steps.DataBaseSteps;
 import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
 import base.BaseTest;
@@ -37,7 +40,6 @@ public class CreateAccountTest extends BaseTest {
                 ResponseSpecs.requestReturnsOK())
                 .get()
                 .extract().as(AccountModel[].class));
-        //если ответ десериализуется в json, то это ведь и будет являться проверкой, да?
     }
 
     @Tag("POSITIVE")
@@ -52,15 +54,17 @@ public class CreateAccountTest extends BaseTest {
                 ResponseSpecs.entityWasCreated())
                 .post(null);
 
-
         ValidatableResponse response = new CrudRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 Endpoint.GET_USER_ACCOUNTS,
                 ResponseSpecs.requestReturnsOK())
                 .get();
 
-
         softly.assertThat(response.body("id", Matchers.hasItem(account.getId())));
+
+        // БД-проверка
+        AccountDao accountDao = DataBaseSteps.getAccountByAccountNumber(account.getAccountNumber());
+        DaoAndModelAssertions.assertThat(account, accountDao).match();
     }
 
 }
