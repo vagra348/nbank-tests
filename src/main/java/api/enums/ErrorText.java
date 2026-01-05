@@ -12,11 +12,10 @@ public enum ErrorText {
     passwordValidationError ("Password must contain at least one digit, one lower case, one upper case, one special character, no spaces, and be at least 8 characters long"),
     usernameLengthError ("Username must be between 3 and 15 characters"),
     invalidName("Name must contain two words with letters only"),
-    invalidDepositAmount("Deposit amount must be at least 0.01"),
-    hugeDepositAmountError("Deposit amount cannot exceed 5000"),
+    invalidDepositAmount("Invalid account or amount"),
+    hugeDepositAmountError("Deposit amount exceeds the 5000 limit"),
     unauthAccessError("Unauthorized access to account"),
     invalidTransferError("Invalid transfer: insufficient funds or invalid accounts"),
-    smallTransferAmountError("Transfer amount must be at least 0.01"),
     hugeTransferAmountError("Transfer amount cannot exceed 10000");
 
     private final String title;
