@@ -1,0 +1,24 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/accounts",
+    "headers": {
+      "Authorization": {
+        "contains": "Bearer"
+      }
+    }
+  },
+  "response": {
+    "status": 201,
+    "jsonBody": {
+      "id": 9999,
+      "accountNumber": "ACC1234567890",
+      "balance": 0.0,
+      "createdAt": "2000-01-01 00:00:00",
+      "transactions": []
+    },
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  }
+}

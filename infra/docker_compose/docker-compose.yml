@@ -76,6 +76,12 @@ services:
     networks:
       - nbank-network
 
+  wiremock:
+    image: wiremock/wiremock:latest
+    ports:
+      - "8085:8085"
+    command: [ "--port", "8085", "--verbose" ]
+
 networks:
   nbank-network:
     name: nbank-network
