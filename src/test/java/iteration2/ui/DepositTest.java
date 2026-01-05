@@ -20,6 +20,7 @@ public class DepositTest extends BaseUiTest {
 
     @Tag("POSITIVE")
     @Test
+    @Tag("ui")
     @UserSession
     public void userCanMakeDepositWithValidAmountTest() {
         AccountModel newAcc = UserSteps.createAccount(SessionStorage.getUser());
@@ -37,6 +38,7 @@ public class DepositTest extends BaseUiTest {
 
     @Tag("NEGATIVE")
     @Test
+    @Tag("ui")
     @UserSession
     public void userCanNotMakeDepositWithInvalidAmountTest() {
         new UserDashboard().open();
@@ -56,6 +58,7 @@ public class DepositTest extends BaseUiTest {
 
     @Tag("NEGATIVE")
     @Test
+    @Tag("ui")
     @UserSession
     public void userCanNotMakeDepositWithoutEnteredSumTest() {
         new UserDashboard().open();

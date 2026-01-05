@@ -25,6 +25,7 @@ public class TransferTest extends BaseUiTest {
     
     @Tag("POSITIVE")
     @Test
+    @Tag("ui")
     @Browsers({"chrome"})
     @UserSession
     public void userCanTransferBetweenOwnAccountsTest() {
@@ -67,6 +68,7 @@ public class TransferTest extends BaseUiTest {
 
     @Tag("NEGATIVE")
     @Test
+    @Tag("ui")
     @UserSession
     public void userCanNotTransferWithoutEnteredSumTest() {
         new UserDashboard().open();
@@ -98,6 +100,7 @@ public class TransferTest extends BaseUiTest {
 
     @Tag("NEGATIVE")
     @Test
+    @Tag("ui")
     @UserSession
     public void userCanNotTransferMoreThanBalanceTest() {
         new UserDashboard().open();

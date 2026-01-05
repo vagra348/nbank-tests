@@ -18,13 +18,12 @@ public class LoginUserTest extends BaseUiTest {
 
     @Tag("POSITIVE")
     @Test
+    @Tag("ui")
     public void adminCanLoginWithCorrectDataTest() {
         CreateUserRequest admin = CreateUserRequest.getAdmin();
 
         new LoginPage().open()
-                .closeAlertIfPresent(3, "dismiss") //не работает, нужно придумать исправление или совершенно новый подход
                 .login(admin.getUsername(), admin.getPassword())
-                .closeAlertIfPresent(3, "accept")
                 .getPage(AdminPanel.class)
                 .getAdminPanelText()
                 .shouldBe(Condition.visible);
@@ -32,6 +31,7 @@ public class LoginUserTest extends BaseUiTest {
 
     @Tag("POSITIVE")
     @Test
+    @Tag("ui")
     public void userCanLoginWithCorrectDataTest() {
         CreateUserRequest user = AdminSteps.createNewUser(this);
 
@@ -45,6 +45,7 @@ public class LoginUserTest extends BaseUiTest {
 
     @Tag("NEGATIVE")
     @Test
+    @Tag("ui")
     public void userCanNotLoginWithIncorrectDataTest() {
         new LoginPage().open()
                 .login("nonExistUser","somePass1$");

@@ -71,7 +71,19 @@ public enum Endpoint {
             "/admin/users/{param}",
             BaseModel.class,
             BaseModel.class
-    );
+    ),
+
+    MAKE_TRANSFER_WITH_FRAUD_CHECK(
+            "/accounts/transfer-with-fraud-check",
+            TransferRequest.class,
+            TransferResponse.class
+    ),
+
+    FRAUD_CHECK_STATUS(
+            "/accounts/fraud-check/{transactionId}",
+            BaseModel.class,
+            FraudCheckResponse.class)
+    ;
 
     private final String url;
     private final Class<? extends BaseModel> requestModel;

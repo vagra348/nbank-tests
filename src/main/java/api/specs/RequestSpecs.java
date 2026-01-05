@@ -24,8 +24,8 @@ public class RequestSpecs {
         return new RequestSpecBuilder()
                 .setContentType(ContentType.JSON)
                 .setAccept(ContentType.JSON)
-                .addFilters(List.of(new RequestLoggingFilter(),
-                        new ResponseLoggingFilter()))
+//                .addFilters(List.of(new RequestLoggingFilter(),
+//                        new ResponseLoggingFilter()))
                 .setBaseUri(Config.getProperty("apiBaseUri") + Config.getProperty("apiVersion"));
     }
 

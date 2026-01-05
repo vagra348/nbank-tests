@@ -144,4 +144,21 @@ public class UserSteps {
                 .get(account.getId());
     }
 
+    public static FraudTransferRequest makeFraudTransferRequest(AccountModel senderAccount, AccountModel receiverAccount,
+                                                                double min, double max, String description) {
+        return FraudTransferRequest.builder()
+                .senderAccountId(senderAccount.getId())
+                .receiverAccountId(receiverAccount.getId())
+                .amount(RandomData.generateSum(min, max))
+                .description(description)
+                .build();
+    }
+
+    public static FraudTransferResponse transferWithFraudCheck(CreateUserRequest createUserRequest, FraudTransferRequest transferRequest) {
+        return new ValidatedCrudRequester<FraudTransferResponse>(
+                RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
+                Endpoint.MAKE_TRANSFER_WITH_FRAUD_CHECK,
+                ResponseSpecs.requestReturnsOK()).post(transferRequest);
+    }
+
 }

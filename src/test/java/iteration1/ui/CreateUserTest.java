@@ -10,6 +10,7 @@ import com.codeborne.selenide.Condition;
 import common.annotations.AdminSession;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
+import ui.elements.UserBadge;
 import ui.pages.AdminPanel;
 import ui.pages.BankAlert;
 
@@ -20,17 +21,18 @@ public class CreateUserTest extends BaseUiTest {
 
     @Tag("POSITIVE")
     @Test
+    @Tag("ui")
     @AdminSession
-    public void adminCanCreateUserTest(){
-        new AdminPanel().open().getAdminPanelText().shouldBe(Condition.visible);
+    public void adminCanCreateUserTest() {
 
         CreateUserRequest newUser = RandomModelGenerator.generate(CreateUserRequest.class);
-        assertTrue(new AdminPanel().open()
+        UserBadge newUserBadge = new AdminPanel().open()
                 .createUser(newUser.getUsername(), newUser.getPassword())
                 .checkAlertAndAccept(BankAlert.USER_CREATED_SUCCESSFULLY.getMessage())
-                .getAllUsers()
-                .stream().anyMatch(userBadge -> userBadge.getUsername().equals(newUser.getUsername())));
-
+                .findUserByUsername(newUser.getUsername());
+        assertThat(newUserBadge)
+                .as("UserBadge should exist on Dashboard after user creation")
+                .isNotNull();
         ProfileModel createdUser = AdminSteps.getAllUsers().stream()
                 .filter(user -> user.getUsername().equals(newUser.getUsername()))
                 .findFirst().get();
@@ -40,8 +42,9 @@ public class CreateUserTest extends BaseUiTest {
 
     @Tag("NEGATIVE")
     @Test
+    @Tag("ui")
     @AdminSession
-    public void adminCanNotCreateUserWithInvalidDataTest(){
+    public void adminCanNotCreateUserWithInvalidDataTest() {
         new AdminPanel().open().getAdminPanelText().shouldBe(Condition.visible);
 
         CreateUserRequest newUser = RandomModelGenerator.generate(CreateUserRequest.class);
