@@ -1,5 +1,7 @@
 package test_with_mocks.api;
 
+import api.enums.FraudTransferCheck;
+import api.enums.FraudTransferReason;
 import api.models.*;
 import api.models.comparison.ModelAssertions;
 import api.requests.steps.AdminSteps;
@@ -14,6 +16,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 @ExtendWith({TimingExtension.class, FraudCheckWireMockExtension.class})
 public class TransferWithFraudCheckTest extends BaseTest {
+
+    String TRANSFER_DESCRIPTION = "Test transfer with fraud check";
 
     @Tag("POSITIVE") @Tag("api") @Test
     @FraudCheckMock(
@@ -34,19 +38,19 @@ public class TransferWithFraudCheckTest extends BaseTest {
         MakeDepositRequest makeDepositRequest = UserSteps.makeDepositRequest(senderAccount, 2000.0, 5000.0);
         UserSteps.makeDeposit(user1Request, makeDepositRequest);
 
-        FraudTransferRequest transferRequest = UserSteps.makeFraudTransferRequest(senderAccount,receiverAccount, 1.0, 1999.0, "Test transfer with fraud check");
+        FraudTransferRequest transferRequest = UserSteps.makeFraudTransferRequest(senderAccount,receiverAccount, 1.0, 1999.0, TRANSFER_DESCRIPTION);
         FraudTransferResponse transferResponse = UserSteps.transferWithFraudCheck(user1Request, transferRequest);
 
         softly.assertThat(transferResponse).isNotNull();
 
         FraudTransferResponse expectedResponse = FraudTransferResponse.builder()
-                .status("APPROVED")
-                .message("Transfer approved and processed immediately")
+                .status(FraudTransferCheck.FRAUD_APPROVED.getTitle())
+                .message(FraudTransferCheck.FRAUD_APPROVED_MSG.getTitle())
                 .amount(transferRequest.getAmount())
                 .senderAccountId(senderAccount.getId())
                 .receiverAccountId(receiverAccount.getId())
                 .fraudRiskScore(0.2)
-                .fraudReason("Low risk transaction")
+                .fraudReason(FraudTransferReason.FRAUD_LOW_RISK_REASON.getTitle())
                 .requiresManualReview(false)
                 .requiresVerification(false)
                 .build();
