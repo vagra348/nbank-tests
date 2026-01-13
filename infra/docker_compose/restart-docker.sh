@@ -7,7 +7,7 @@ echo ">>> Stop Docker Compose"
 docker compose down
 
 echo ">>> Docker pull all browsers"
-json_file="./infra/docker_compose/config/browsers.json"
+json_file="./config/browsers.json"
 if ! command -v jq &> /dev/null; then
     echo "❌ jq is not installed. Please install jq and try again."
     exit 1

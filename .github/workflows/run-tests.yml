@@ -3,8 +3,8 @@ name: Run tests
 on: [ push, workflow_dispatch ]
 
 jobs:
-  setup:
-    name: Set up services
+  setup-and-run-tests:
+    name: Set up services and run tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -27,10 +27,6 @@ jobs:
       - name: Set up services
         run: pwd && cd infra/docker_compose && pwd && bash ./restart-docker.sh && pwd && cd ../.. && pwd
 
-  run-tests:
-    name: Run tests
-    runs-on: ubuntu-latest
-    steps:
       - name: Set permissions
         run: chmod +x mvnw
 
