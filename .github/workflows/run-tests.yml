@@ -31,4 +31,7 @@ jobs:
         run: chmod +x mvnw
 
       - name: Run tests
-        run: ./mvnw clean test
+        run: ./mvnw clean test -q
+        env:
+          APIBASEURI: http://localhost:4111
+          UIBASEURL: http://frontend
