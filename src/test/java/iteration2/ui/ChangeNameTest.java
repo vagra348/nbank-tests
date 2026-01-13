@@ -21,16 +21,15 @@ public class ChangeNameTest extends BaseUiTest {
     @Tag("POSITIVE")
     @Test
     @UserSession
-    public void userCanChangeNameWithValidDataTest() {
+    public void userCanChangeNameWithValidDataTest() throws InterruptedException {
         String newName = RandomData.qenerateName();
         new UserDashboard().open().getUserNameProfile().click();
-        new EditProfilePage().changeName(newName)
+        new EditProfilePage().changeName(newName, BankAlert.NAME_UPDATED_SUCCESSFULLY.getMessage())
                 .checkAlertAndAccept(BankAlert.NAME_UPDATED_SUCCESSFULLY.getMessage());
 
-        UserDashboard dashboard = new UserDashboard();
-        assertEquals(dashboard.open()
-                .getWelcomeTitle().getUserName(), newName);
-        dashboard.getWelcomeText().shouldBe(Condition.visible);
+        UserDashboard dashboard = new UserDashboard().open();
+        String actualName = dashboard.getUserNameInWelcomeText();
+        assertEquals(newName, actualName);
 
         ProfileModel changedUser = UserSteps.getProfile(SessionStorage.getUser());
         assertThat(changedUser.getName()).isEqualTo(newName);
@@ -39,12 +38,9 @@ public class ChangeNameTest extends BaseUiTest {
     @Tag("NEGATIVE")
     @Test
     @UserSession
-    public void userCanNotChangeNameWithInvalidDataTest() { //иногда падает, т.к. открываем один контейнер,
-                                                            //и из кэша может подтягиваться значение из предыдущего теста.
-                                                            //даже вручную в браузере иногда нужно насильно чистить кэш,
-                                                            //просто перезагрузка страницы не помогает
+    public void userCanNotChangeNameWithInvalidDataTest() {
         new UserDashboard().open().getUserNameProfile().click();
-        new EditProfilePage().changeName(RandomData.qenerateWord())
+        new EditProfilePage().changeName(RandomData.qenerateWord(), BankAlert.INVALID_NAME.getMessage())
                 .checkAlertAndAccept(BankAlert.INVALID_NAME.getMessage());
 
         UserDashboard dashboard = new UserDashboard();
