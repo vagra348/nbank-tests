@@ -1,5 +1,9 @@
 package iteration2.api;
 
+import api.dao.AccountDao;
+import api.dao.comparison.DaoAndModelAssertions;
+import api.database.Condition;
+import api.database.DBRequest;
 import api.enums.ErrorText;
 import api.generators.RandomData;
 import api.models.AccountModel;
@@ -7,6 +11,7 @@ import api.models.CreateUserRequest;
 import api.models.MakeDepositRequest;
 import api.models.comparison.ModelAssertions;
 import api.requests.steps.AdminSteps;
+import api.requests.steps.DataBaseSteps;
 import api.requests.steps.UserSteps;
 import base.BaseTest;
 import org.junit.jupiter.api.Tag;
@@ -17,6 +22,8 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 import java.util.List;
 import java.util.stream.Stream;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class DepositTest extends BaseTest {
 
@@ -40,6 +47,10 @@ public class DepositTest extends BaseTest {
 
         softly.assertThat(firstAcc.getBalance()).isEqualTo(amount);
         ModelAssertions.assertThatModel(firstAcc, newAcc).match();
+
+        // БД-проверка, что баланс поменялся
+        AccountDao accountDao = DataBaseSteps.getAccountByAccountNumber(newAcc.getAccountNumber());
+        DaoAndModelAssertions.assertThat(firstAcc, accountDao).match();
     }
 
     @Tag("NEGATIVE")
@@ -61,6 +72,10 @@ public class DepositTest extends BaseTest {
         AccountModel firstAcc = accounts.getFirst();
 
         ModelAssertions.assertThatModel(firstAcc, newAcc).match();
+
+        // БД-проверка, что баланс не поменялся
+        AccountDao accountDao = DataBaseSteps.getAccountByAccountNumber(newAcc.getAccountNumber());
+        DaoAndModelAssertions.assertThat(newAcc, accountDao).match();
     }
 
     @Tag("NEGATIVE")
@@ -84,6 +99,10 @@ public class DepositTest extends BaseTest {
 
         softly.assertThat(firstAcc.getBalance()).isEqualTo(accountUser2.getBalance());
         ModelAssertions.assertThatModel(firstAcc, accountUser2).match();
+
+        // БД-проверка, что баланс у юзера 2 не поменялся
+        AccountDao accountDao = DataBaseSteps.getAccountByAccountNumber(accountUser2.getAccountNumber());
+        DaoAndModelAssertions.assertThat(firstAcc, accountDao).match();
     }
 
     @Tag("NEGATIVE")
@@ -102,6 +121,14 @@ public class DepositTest extends BaseTest {
                 .build();
 
         UserSteps.makeForbiddenDeposit(createUserRequest, makeDepositRequest);
+
+        // БД-проверка, что не существует (некуда отправлять) или каким-то образом не создался новый аккаунт
+        String sqlResponse = DBRequest.builder()
+                .requestType(DBRequest.RequestType.SELECT_AND)
+                .table(DataBaseSteps.DBTables.ACCOUNTS.getName())
+                .where(Condition.equalTo("id", nonExistentAccountId))
+                .extractAs(String.class);
+        assertThat(sqlResponse).isNull();
     }
 
     public static Stream<Arguments> validDepositAmounts() {
