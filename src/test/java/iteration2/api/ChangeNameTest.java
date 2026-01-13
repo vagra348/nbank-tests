@@ -22,6 +22,7 @@ public class ChangeNameTest extends BaseTest {
 
     @Tag("POSITIVE")
     @Test
+    @Tag("api")
     public void authorizedUserCanChangeNameTest() {
         CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 
@@ -43,6 +44,7 @@ public class ChangeNameTest extends BaseTest {
     @Tag("NEGATIVE")
     @MethodSource("invalidNameData")
     @ParameterizedTest
+    @Tag("api")
     public void authorizedUserCanNotChangeNameWithInvalidDataTest(String name, String errorValue) {
         CreateUserRequest createUserRequest = AdminSteps.createNewUser(this);
 

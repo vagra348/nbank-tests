@@ -27,6 +27,7 @@ public class CreateUserTest extends BaseTest {
     @Tag("POSITIVE")
     @MethodSource("userCorrectData")
     @ParameterizedTest
+    @Tag("api")
     public void adminCanCreateUserWithCorrectDataTest(String username, String password, String role) {
         CreateUserRequest createUserRequest = CreateUserRequest.builder()
                 .username(username)
@@ -44,6 +45,7 @@ public class CreateUserTest extends BaseTest {
 
     @Tag("NEGATIVE")
     @Test
+    @Tag("api")
     public void adminCanNotCreateUserWithExistingUsername() {
         CreateUserRequest createUserRequest = CreateUserRequest.builder()
                 .username(Config.getProperty("admin.username"))
@@ -64,6 +66,7 @@ public class CreateUserTest extends BaseTest {
     @Tag("NEGATIVE")
     @MethodSource("usernameInvalidData")
     @ParameterizedTest
+    @Tag("api")
     public void adminCanNotCreateUserWithInvalidUsername(String username, String password, String role, String errorKey, String errorValue) {
         CreateUserRequest createUserRequest = CreateUserRequest.builder()
                 .username(username)
@@ -85,6 +88,7 @@ public class CreateUserTest extends BaseTest {
     @Tag("NEGATIVE")
     @MethodSource("passwordInvalidData")
     @ParameterizedTest
+    @Tag("api")
     public void adminCanNotCreateUserWithInvalidPassword(String username, String password, String role, String errorKey, String errorValue) {
         CreateUserRequest createUserRequest = CreateUserRequest.builder()
                 .username(username)
@@ -106,6 +110,7 @@ public class CreateUserTest extends BaseTest {
     @Tag("NEGATIVE")
     @MethodSource("roleInvalidData")
     @ParameterizedTest
+    @Tag("api")
     public void adminCanNotCreateUserWithInvalidRole(String username, String password, String role, String errorKey, String errorValue) {
         CreateUserRequest createUserRequest = CreateUserRequest.builder()
                 .username(username)

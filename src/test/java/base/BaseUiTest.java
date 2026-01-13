@@ -5,6 +5,7 @@ import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.Selenide;
 import common.extensions.AdminSessionExtension;
 import common.extensions.BrowserMatcExtension;
+import common.extensions.TimingExtension;
 import common.extensions.UserSessionExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -15,6 +16,7 @@ import java.util.Map;
 import static com.codeborne.selenide.Configuration.timeout;
 
 @ExtendWith(BrowserMatcExtension.class)
+@ExtendWith(TimingExtension.class)
 @ExtendWith(AdminSessionExtension.class)
 @ExtendWith(UserSessionExtension.class)
 public class BaseUiTest extends BaseTest {
@@ -24,6 +26,7 @@ public class BaseUiTest extends BaseTest {
         Configuration.baseUrl = Config.getProperty("uiBaseUrl");
         Configuration.browser = Config.getProperty("browser");
         Configuration.browserSize = Config.getProperty("browserSize");
+        Configuration.headless = true;
 
         timeout = 8000;
 
@@ -37,5 +40,6 @@ public class BaseUiTest extends BaseTest {
     public void clearBrowser() {
         Selenide.clearBrowserCookies();
         Selenide.clearBrowserLocalStorage();
+        Selenide.closeWebDriver();
     }
 }
