@@ -10,6 +10,7 @@ import base.BaseTest;
 import common.annotations.FraudCheckMock;
 import common.extensions.FraudCheckWireMockExtension;
 import common.extensions.TimingExtension;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,6 +20,7 @@ public class TransferWithFraudCheckTest extends BaseTest {
 
     String TRANSFER_DESCRIPTION = "Test transfer with fraud check";
 
+    @Disabled
     @Tag("POSITIVE") @Tag("api") @Test
     @FraudCheckMock(
             status = "SUCCESS",

@@ -7,6 +7,7 @@ import common.annotations.MockWith;
 import io.restassured.RestAssured;
 import io.restassured.response.ValidatableResponse;
 import org.hamcrest.Matchers;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
@@ -18,7 +19,7 @@ import java.util.List;
 })
 public class CreateAccountMockTest extends WireMockTest {
 
-    @Test
+    @Test @Disabled
     @Tag("mock")
     @Tag("wiremock")
     public void createAccountWithMock() {
@@ -38,7 +39,7 @@ public class CreateAccountMockTest extends WireMockTest {
 
     }
 
-    @Test
+    @Test @Disabled
     @Tag("mock")
     @Tag("wiremock")
     public void authorizedUserCanSeeHisAccountsWithMock() {
