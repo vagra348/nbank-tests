@@ -70,10 +70,6 @@ jobs:
           echo "SHORT_HASH=$SHORT_HASH"
           echo "short_hash=$SHORT_HASH" >> $GITHUB_OUTPUT
 
-      - name: Debug - Print commit hash
-        run: |
-          echo "Commit hash from step: ${{ steps.get-commit-hash.outputs.short_hash }}"
-
       - name: Run push script with commit hash
         run: |
           chmod +x push-tests.sh
