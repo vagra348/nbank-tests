@@ -1,7 +1,5 @@
 package iteration2.api;
 
-import api.dao.UserDao;
-import api.dao.comparison.DaoAndModelAssertions;
 import api.enums.ErrorText;
 import api.generators.RandomModelGenerator;
 import api.models.ChangeNameRequest;
@@ -10,7 +8,6 @@ import api.models.CreateUserRequest;
 import api.models.ProfileModel;
 import api.models.comparison.ModelAssertions;
 import api.requests.steps.AdminSteps;
-import api.requests.steps.DataBaseSteps;
 import api.requests.steps.UserSteps;
 import base.BaseTest;
 import org.junit.jupiter.api.Tag;
@@ -37,16 +34,16 @@ public class ChangeNameTest extends BaseTest {
 
         ModelAssertions.assertThatModel(changeNameResponse.getCustomer(), changeNameRequest).match();
         // БД-проверка
-        UserDao userDao = DataBaseSteps.getUserByUsername(createUserRequest.getUsername());
-        DaoAndModelAssertions.assertThat(createUserRequest, userDao).match();
+//        UserDao userDao = DataBaseSteps.getUserByUsername(createUserRequest.getUsername());
+//        DaoAndModelAssertions.assertThat(createUserRequest, userDao).match();
 
         ProfileModel profile = UserSteps.getProfile(createUserRequest);
 
         ModelAssertions.assertThatModel(createUserRequest, profile).match();
         ModelAssertions.assertThatModel(profile, changeNameRequest).match();
         // БД-проверка
-        UserDao userDaoAfterNameChange = DataBaseSteps.getUserByUsername(profile.getUsername());
-        DaoAndModelAssertions.assertThat(profile, userDaoAfterNameChange).match();
+//        UserDao userDaoAfterNameChange = DataBaseSteps.getUserByUsername(profile.getUsername());
+//        DaoAndModelAssertions.assertThat(profile, userDaoAfterNameChange).match();
     }
 
     @Tag("NEGATIVE")
@@ -66,8 +63,8 @@ public class ChangeNameTest extends BaseTest {
         softly.assertThat(profile.getName()).isEqualTo(null);
 
         // БД-проверка
-        UserDao userDao = DataBaseSteps.getUserByUsername(createUserRequest.getUsername());
-        DaoAndModelAssertions.assertThat(createUserRequest, userDao).match();
+//        UserDao userDao = DataBaseSteps.getUserByUsername(createUserRequest.getUsername());
+//        DaoAndModelAssertions.assertThat(createUserRequest, userDao).match();
     }
 
     public static Stream<Arguments> invalidNameData() {

@@ -9,6 +9,8 @@ public interface CrudEndpointInterface {
 
     Object get(Integer id);
 
+    Object get(String param, Integer id);
+
     Object update(BaseModel model);
 
     Object delete(Integer id);

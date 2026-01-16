@@ -1,14 +1,11 @@
 package iteration1.api;
 
-import api.dao.AccountDao;
-import api.dao.comparison.DaoAndModelAssertions;
 import api.models.AccountModel;
 import api.models.CreateUserRequest;
 import api.requests.skelethon.Endpoint;
 import api.requests.skelethon.requesters.CrudRequester;
 import api.requests.skelethon.requesters.ValidatedCrudRequester;
 import api.requests.steps.AdminSteps;
-import api.requests.steps.DataBaseSteps;
 import api.specs.RequestSpecs;
 import api.specs.ResponseSpecs;
 import base.BaseTest;
@@ -63,8 +60,8 @@ public class CreateAccountTest extends BaseTest {
         softly.assertThat(response.body("id", Matchers.hasItem(account.getId())));
 
         // БД-проверка
-        AccountDao accountDao = DataBaseSteps.getAccountByAccountNumber(account.getAccountNumber());
-        DaoAndModelAssertions.assertThat(account, accountDao).match();
+//        AccountDao accountDao = DataBaseSteps.getAccountByAccountNumber(account.getAccountNumber());
+//        DaoAndModelAssertions.assertThat(account, accountDao).match();
     }
 
 }

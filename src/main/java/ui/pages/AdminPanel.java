@@ -3,6 +3,7 @@ package ui.pages;
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.Selectors;
 import com.codeborne.selenide.SelenideElement;
+import common.helpers.StepLogger;
 import common.utils.RetryUtils;
 import lombok.Getter;
 import ui.elements.UserBadge;
@@ -17,8 +18,10 @@ public class AdminPanel extends BasePage<AdminPanel> {
     private SelenideElement addUserBtn = $(Selectors.byXpath("//button[text()='Add User']"));
 
     public List<UserBadge> getAllUsers() {
-        ElementsCollection elementsCollection = $(Selectors.byText("All Users")).parent().findAll("li");
-        return generatePageElements(elementsCollection, UserBadge::new);
+        return StepLogger.log("Get all users from Dashboard",  () -> {
+            ElementsCollection elementsCollection = $(Selectors.byText("All Users")).parent().findAll("li");
+            return generatePageElements(elementsCollection, UserBadge::new);
+        });
     }
 
     public AdminPanel createUser(String username, String password) {

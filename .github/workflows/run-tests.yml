@@ -51,6 +51,18 @@ jobs:
       - name: Run Checkstyle
         run: ./mvnw checkstyle:check
 
+      - name: Run Swagger coverage
+        run: |
+          sleep 15
+          .swagger-coverage-commandline-1.5.0/bin/swagger-coverage-commandline \
+            -s http://localhost:4111/v3/api-docs \
+            -i swagger-coverage-output
+
+      - name: Check API coverage Quality Gate
+        run: |
+          chmod +x ./check-coverage.sh
+          ./check-coverage.sh swagger-coverage-results.json 50
+
   build-and-push:
     name: Build and push image
     runs-on: ubuntu-latest

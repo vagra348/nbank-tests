@@ -3,10 +3,12 @@ package base;
 import api.configs.Config;
 import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.Selenide;
+import com.codeborne.selenide.logevents.SelenideLogger;
 import common.extensions.AdminSessionExtension;
 import common.extensions.BrowserMatcExtension;
 import common.extensions.TimingExtension;
 import common.extensions.UserSessionExtension;
+import io.qameta.allure.selenide.AllureSelenide;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +29,10 @@ public class BaseUiTest extends BaseTest {
         Configuration.browser = Config.getProperty("browser");
         Configuration.browserSize = Config.getProperty("browserSize");
         Configuration.headless = true;
+
+        SelenideLogger.addListener("AllureSelenide", new AllureSelenide()
+                .screenshots(true)
+                .savePageSource(true));
 
         timeout = 8000;
 

@@ -149,7 +149,7 @@ public class UserSteps {
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 Endpoint.TRANSACTIONS,
                 ResponseSpecs.requestReturnsOK())
-                .get(account.getId());
+                .get("param", account.getId());
     }
 
     public static FraudTransferRequest makeFraudTransferRequest(AccountModel senderAccount,
