@@ -50,11 +50,14 @@ public abstract class BasePage<T extends BasePage> {
         authWithToken(user.getUsername(), user.getPassword());
     }
 
-    protected <T extends BaseElement> T generatePageElement(SelenideElement element, Function<SelenideElement, T> constructor) {
+    protected <T extends BaseElement> T generatePageElement(SelenideElement element,
+                                                            Function<SelenideElement,
+                                                                    T> constructor) {
         return constructor.apply(element);
     }
 
-    protected <T extends BaseElement> List<T> generatePageElements(ElementsCollection elementsCollection, Function<SelenideElement, T> constructor) {
+    protected <T extends BaseElement> List<T> generatePageElements(ElementsCollection elementsCollection,
+                                                                   Function<SelenideElement, T> constructor) {
         return elementsCollection.stream().map(constructor).toList();
     }
 }

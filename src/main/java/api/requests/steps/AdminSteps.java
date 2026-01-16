@@ -32,7 +32,6 @@ public class AdminSteps {
         return createUserRequest;
     }
 
-
     public static ProfileModel createUser(CreateUserRequest createUserRequest) {
         return new ValidatedCrudRequester<ProfileModel>(
                 RequestSpecs.adminSpec(),

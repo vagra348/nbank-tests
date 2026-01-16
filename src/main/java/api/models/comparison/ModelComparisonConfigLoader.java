@@ -18,7 +18,6 @@ public class ModelComparisonConfigLoader {
                 String[] target = props.getProperty(key).split(":");
                 if (target.length != 2) continue;
 
-
                 String responseClassName = target[0].trim();
                 List<String> fields = Arrays.asList(target[1].split(","));
 
@@ -29,7 +28,7 @@ public class ModelComparisonConfigLoader {
         }
     }
 
-    public ComparisonRule getRuleFor(Class<?> requestClass){
+    public ComparisonRule getRuleFor(Class<?> requestClass) {
         return rules.get(requestClass.getSimpleName());
     }
 
@@ -41,9 +40,9 @@ public class ModelComparisonConfigLoader {
             this.responseClassSimpleName = responseClassSimpleName;
             this.fieldMappings = new HashMap<>();
 
-            for (String pair : fieldPairs){
+            for (String pair : fieldPairs) {
                 String[] parts = pair.split("=");
-                if (parts.length == 2){
+                if (parts.length == 2) {
                     fieldMappings.put(parts[0].trim(), parts[1].trim());
                 } else {
                     fieldMappings.put(pair.trim(), pair.trim());
@@ -51,7 +50,10 @@ public class ModelComparisonConfigLoader {
             }
         }
 
-        public String getResponseClassSimpleName(){return responseClassSimpleName;}
-        public Map<String, String> getFieldMappings() {return fieldMappings;}
+        public String getResponseClassSimpleName() {
+            return responseClassSimpleName; }
+
+        public Map<String, String> getFieldMappings() {
+            return fieldMappings; }
     }
 }

@@ -12,7 +12,7 @@ public class SessionStorage {
 
     private final LinkedHashMap<CreateUserRequest, UserSteps> userStepsMap = new LinkedHashMap<>();
 
-    private SessionStorage(){};
+    private SessionStorage() { }
 
     public static void addUsers(List<CreateUserRequest> users) {
         for (CreateUserRequest user : users) {
@@ -28,11 +28,11 @@ public class SessionStorage {
         return getUser(1);
     }
 
-    public static UserSteps getSteps(int number){
+    public static UserSteps getSteps(int number) {
         return new ArrayList<>(INSTANCE.get().userStepsMap.values()).get(number - 1);
     }
 
-    public static UserSteps getSteps(){
+    public static UserSteps getSteps() {
         return getSteps(1);
     }
 

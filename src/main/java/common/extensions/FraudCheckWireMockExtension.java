@@ -31,14 +31,14 @@ public class FraudCheckWireMockExtension implements BeforeEachCallback, AfterEac
         wireMockServer.start();
         WireMock.configureFor("0.0.0.0", config.port());
 
-        String responseBody = String.format("{\n" +
-                        "  \"status\": \"%s\",\n" +
-                        "  \"decision\": \"%s\",\n" +
-                        "  \"riskScore\": %.1f,\n" +
-                        "  \"reason\": \"%s\",\n" +
-                        "  \"requiresManualReview\": %s,\n" +
-                        "  \"additionalVerificationRequired\": %s\n" +
-                        "}",
+        String responseBody = String.format("{\n"
+                        + "  \"status\": \"%s\",\n"
+                        + "  \"decision\": \"%s\",\n"
+                        + "  \"riskScore\": %.1f,\n"
+                        + "  \"reason\": \"%s\",\n"
+                        + "  \"requiresManualReview\": %s,\n"
+                        + "  \"additionalVerificationRequired\": %s\n"
+                        + "}",
                 config.status(),
                 config.decision(),
                 config.riskScore(),

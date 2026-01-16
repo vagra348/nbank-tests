@@ -13,7 +13,8 @@ public class ModelComparator {
         return compareFields(request, response, fieldMappings, 0.01);
     }
 
-    public static <A, B> ComparisonResult compareFields(A request, B response, Map<String, String> fieldMappings, double epsilon) {
+    public static <A, B> ComparisonResult compareFields(A request, B response,
+                                                        Map<String, String> fieldMappings, double epsilon) {
         List<ComparisonResult.Mismatch> mismatches = new ArrayList<>();
 
         for (Map.Entry<String, String> entry : fieldMappings.entrySet()) {

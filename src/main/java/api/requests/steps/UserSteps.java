@@ -48,7 +48,8 @@ public class UserSteps {
                 .build();
     }
 
-    public static TransferRequest makeTransferRequest(AccountModel senderAccount, AccountModel receiverAccount, double min, double max) {
+    public static TransferRequest makeTransferRequest(AccountModel senderAccount, AccountModel receiverAccount,
+                                                      double min, double max) {
         return TransferRequest.builder()
                 .senderAccountId(senderAccount.getId())
                 .receiverAccountId(receiverAccount.getId())
@@ -56,7 +57,8 @@ public class UserSteps {
                 .build();
     }
 
-    public static TransferRequest makeTransferRequest(AccountModel senderAccount, AccountModel receiverAccount, double amount) {
+    public static TransferRequest makeTransferRequest(AccountModel senderAccount,
+                                                      AccountModel receiverAccount, double amount) {
         return TransferRequest.builder()
                 .senderAccountId(senderAccount.getId())
                 .receiverAccountId(receiverAccount.getId())
@@ -64,7 +66,8 @@ public class UserSteps {
                 .build();
     }
 
-    public static ValidatableResponse makeDeposit(CreateUserRequest createUserRequest, MakeDepositRequest makeDepositRequest) {
+    public static ValidatableResponse makeDeposit(CreateUserRequest createUserRequest,
+                                                  MakeDepositRequest makeDepositRequest) {
         return new CrudRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 Endpoint.MAKE_DEPOSIT,
@@ -72,7 +75,8 @@ public class UserSteps {
                 .post(makeDepositRequest);
     }
 
-    public static ValidatableResponse makeBadReqDeposit(CreateUserRequest createUserRequest, MakeDepositRequest makeDepositRequest, String errorValue) {
+    public static ValidatableResponse makeBadReqDeposit(CreateUserRequest createUserRequest,
+                                                        MakeDepositRequest makeDepositRequest, String errorValue) {
         return new CrudRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 Endpoint.MAKE_DEPOSIT,
@@ -80,7 +84,8 @@ public class UserSteps {
                 .post(makeDepositRequest);
     }
 
-    public static ValidatableResponse makeForbiddenDeposit(CreateUserRequest createUserRequest, MakeDepositRequest makeDepositRequest) {
+    public static ValidatableResponse makeForbiddenDeposit(CreateUserRequest createUserRequest,
+                                                           MakeDepositRequest makeDepositRequest) {
         return new CrudRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 Endpoint.MAKE_DEPOSIT,
@@ -96,7 +101,8 @@ public class UserSteps {
                 .post(transferRequest);
     }
 
-    public static ValidatableResponse makeTransferBadReq(CreateUserRequest createUserRequest, TransferRequest transferRequest, String errorValue) {
+    public static ValidatableResponse makeTransferBadReq(CreateUserRequest createUserRequest,
+                                                         TransferRequest transferRequest, String errorValue) {
         return new CrudRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 Endpoint.MAKE_TRANSFER,
@@ -104,7 +110,8 @@ public class UserSteps {
                 .post(transferRequest);
     }
 
-    public static ChangeNameResponse changeName(CreateUserRequest createUserRequest, ChangeNameRequest changeNameRequest) {
+    public static ChangeNameResponse changeName(CreateUserRequest createUserRequest,
+                                                ChangeNameRequest changeNameRequest) {
         return new ValidatedCrudRequester<ChangeNameResponse>(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 Endpoint.CHANGE_NAME,
@@ -112,7 +119,8 @@ public class UserSteps {
                 .update(changeNameRequest);
     }
 
-    public static ValidatableResponse changeNameBadReq(CreateUserRequest createUserRequest, ChangeNameRequest changeNameRequest, String errorValue) {
+    public static ValidatableResponse changeNameBadReq(CreateUserRequest createUserRequest,
+                                                       ChangeNameRequest changeNameRequest, String errorValue) {
         return new CrudRequester(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 Endpoint.CHANGE_NAME,
@@ -144,8 +152,10 @@ public class UserSteps {
                 .get(account.getId());
     }
 
-    public static FraudTransferRequest makeFraudTransferRequest(AccountModel senderAccount, AccountModel receiverAccount,
-                                                                double min, double max, String description) {
+    public static FraudTransferRequest makeFraudTransferRequest(AccountModel senderAccount,
+                                                                AccountModel receiverAccount,
+                                                                double min, double max,
+                                                                String description) {
         return FraudTransferRequest.builder()
                 .senderAccountId(senderAccount.getId())
                 .receiverAccountId(receiverAccount.getId())
@@ -154,7 +164,8 @@ public class UserSteps {
                 .build();
     }
 
-    public static FraudTransferResponse transferWithFraudCheck(CreateUserRequest createUserRequest, FraudTransferRequest transferRequest) {
+    public static FraudTransferResponse transferWithFraudCheck(CreateUserRequest createUserRequest,
+                                                               FraudTransferRequest transferRequest) {
         return new ValidatedCrudRequester<FraudTransferResponse>(
                 RequestSpecs.authUserSpec(createUserRequest.getUsername(), createUserRequest.getPassword()),
                 Endpoint.MAKE_TRANSFER_WITH_FRAUD_CHECK,

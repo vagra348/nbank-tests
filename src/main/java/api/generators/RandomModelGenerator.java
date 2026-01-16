@@ -8,9 +8,10 @@ import java.lang.reflect.Type;
 import java.util.*;
 
 public class RandomModelGenerator {
-    private static final Random random = new Random();
-    public static <T> T generate(Class<T> clazz){
-        try{
+    private static final Random RANDOM = new Random();
+    
+    public static <T> T generate(Class<T> clazz) {
+        try {
             T instance = clazz.getDeclaredConstructor().newInstance();
             for (Field field : getAllFields(clazz)) {
                 field.setAccessible(true);
@@ -21,13 +22,11 @@ public class RandomModelGenerator {
                     value = generateFromRegex(rule.regex(), field.getType());
                 } else  {
                     value = generateRandomValue(field);
-
-
                 }
                 field.set(instance, value);
             }
             return instance;
-        } catch (Exception e){
+        } catch (Exception e) {
             throw new RuntimeException("Failed to generate entity", e);
         }
     }
@@ -43,20 +42,20 @@ public class RandomModelGenerator {
 
     private static Object generateRandomValue(Field field) {
         Class<?> type = field.getType();
-        if(type.equals(String.class)) {
+        if (type.equals(String.class)) {
             return UUID.randomUUID().toString();
         } else if (type.equals(Integer.class) || type.equals(int.class)) {
-            return random.nextInt(1000);
+            return RANDOM.nextInt(1000);
         } else if (type.equals(Long.class) || type.equals(long.class)) {
-            return random.nextLong();
+            return RANDOM.nextLong();
         } else if (type.equals(Double.class) || type.equals(double.class)) {
-            return random.nextDouble() * 100;
+            return RANDOM.nextDouble() * 100;
         } else if (type.equals(Boolean.class) || type.equals(boolean.class)) {
-            return random.nextBoolean();
+            return RANDOM.nextBoolean();
         } else if (type.equals(List.class)) {
             return generateRandomList(field);
         } else if (type.equals(Date.class)) {
-            return new Date(System.currentTimeMillis() - random.nextInt(1000000000));
+            return new Date(System.currentTimeMillis() - RANDOM.nextInt(1000000000));
         } else {
             return generate(type);
         }
@@ -76,14 +75,14 @@ public class RandomModelGenerator {
         }
     }
 
-    private static List<String> generateRandomList(Field field){
+    private static List<String> generateRandomList(Field field) {
         Type generictype = field.getGenericType();
         if (generictype instanceof ParameterizedType) {
             ParameterizedType pt = (ParameterizedType) generictype;
             Type actualType = pt.getActualTypeArguments()[0];
             if (actualType == String.class) {
-                return List.of(UUID.randomUUID().toString().substring(0,5),
-                        UUID.randomUUID().toString().substring(0,5));
+                return List.of(UUID.randomUUID().toString().substring(0, 5),
+                        UUID.randomUUID().toString().substring(0, 5));
             }
         }
         return Collections.emptyList();

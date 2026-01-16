@@ -82,8 +82,7 @@ public enum Endpoint {
     FRAUD_CHECK_STATUS(
             "/accounts/fraud-check/{transactionId}",
             BaseModel.class,
-            FraudCheckResponse.class)
-    ;
+            FraudCheckResponse.class);
 
     private final String url;
     private final Class<? extends BaseModel> requestModel;

@@ -4,7 +4,7 @@ import com.codeborne.selenide.SelenideElement;
 import lombok.Getter;
 
 @Getter
-public class WelcomeTitle extends BaseElement{
+public class WelcomeTitle extends BaseElement {
     private String welcomeText;
     private String userName;
     private String znak;

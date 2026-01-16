@@ -13,7 +13,6 @@ public class DepositPage extends BasePage<DepositPage> {
     private SelenideElement depositAmountInput = $(Selectors.byAttribute("placeholder", "Enter amount"));
     private SelenideElement depositBtn = $(Selectors.byText("\uD83D\uDCB5 Deposit"));
 
-
     public DepositPage makeDeposit(AccountModel newAcc, Double sum) {
         selectAccSelect.click();
         selectAccSelect.selectOptionByValue(String.valueOf(newAcc.getId()));

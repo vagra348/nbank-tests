@@ -24,7 +24,6 @@ public class DBRequest {
         SELECT_AND, SELECT_OR, INSERT, UPDATE, DELETE
     }
 
-
     public <T> T extractAs(Class<T> clazz) {
         this.extractAsClass = clazz;
         return executeSingleQuery(clazz);
@@ -107,15 +106,15 @@ public class DBRequest {
                     columnValue = convertType(columnValue, matchingField.getType());
                     matchingField.set(daoInstance, columnValue);
                 } else {
-                    System.out.println("Warning: No matching field found in " +
-                            daoClass.getSimpleName() + " for column '" + columnName + "'");
+                    System.out.println("Warning: No matching field found in "
+                            + daoClass.getSimpleName() + " for column '" + columnName + "'");
                 }
             }
 
             return daoInstance;
 
-        } catch (InstantiationException | IllegalAccessException |
-                 NoSuchMethodException | InvocationTargetException e) {
+        } catch (InstantiationException | IllegalAccessException
+                 | NoSuchMethodException | InvocationTargetException e) {
             throw new RuntimeException("Failed to map ResultSet to " + daoClass.getSimpleName(), e);
         }
     }
@@ -262,7 +261,8 @@ public class DBRequest {
                     sql.append(" WHERE ");
                     for (int i = 0; i < conditions.size(); i++) {
                         if (i > 0) sql.append(" AND ");
-                        sql.append(conditions.get(i).getColumn()).append(" ").append(conditions.get(i).getOperator()).append(" ?");
+                        sql.append(conditions.get(i).getColumn()).append(" ")
+                                .append(conditions.get(i).getOperator()).append(" ?");
                     }
                 }
                 break;
@@ -272,7 +272,8 @@ public class DBRequest {
                     sql.append(" WHERE ");
                     for (int i = 0; i < conditions.size(); i++) {
                         if (i > 0) sql.append(" OR ");
-                        sql.append(conditions.get(i).getColumn()).append(" ").append(conditions.get(i).getOperator()).append(" ?");
+                        sql.append(conditions.get(i).getColumn()).append(" ")
+                                .append(conditions.get(i).getOperator()).append(" ?");
                     }
                 }
                 break;

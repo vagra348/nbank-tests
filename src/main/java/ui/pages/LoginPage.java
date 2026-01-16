@@ -20,6 +20,7 @@ public class LoginPage extends BasePage<LoginPage> {
         admitBtn.click();
         return this;
     }
+
     public String url() {
         return "/login";
     }

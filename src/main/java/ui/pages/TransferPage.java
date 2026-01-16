@@ -24,7 +24,8 @@ public class TransferPage extends BasePage<TransferPage> {
     private SelenideElement sendTransferBtn = $(Selectors.byText("\uD83D\uDE80 Send Transfer"));
     private SelenideElement transferAgainBtn = $(Selectors.byText("\uD83D\uDD01 Transfer Again"));
 
-    private ElementsCollection allTransactionsList = $$(Selectors.byXpath("//*[text()='Matching Transactions']/parent::*/ul/li/span"));
+    private ElementsCollection allTransactionsList = $$(Selectors.byXpath(
+            "//*[text()='Matching Transactions']/parent::*/ul/li/span"));
 
     public List<Transaction> getTransactionsElementsList() {
         ElementsCollection elements = $(Selectors.byText("Matching Transactions"))

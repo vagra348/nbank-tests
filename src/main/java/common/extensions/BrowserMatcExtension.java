@@ -22,7 +22,7 @@ public class BrowserMatcExtension implements ExecutionCondition {
                 .anyMatch(browser -> browser.equals(currentBrowser));
         if (matches) {
             return ConditionEvaluationResult.enabled("Current browser passes the condition: " + currentBrowser);
-        } {
+        } else {
             return ConditionEvaluationResult.disabled("Test missed, current browser doesn't pass the condition: "
                     + currentBrowser + ", allowed browsers: " + Arrays.toString(annotation.value()));
         }

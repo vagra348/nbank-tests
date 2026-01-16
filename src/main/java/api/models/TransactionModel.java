@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class TransactionModel extends BaseModel{
+public class TransactionModel extends BaseModel {
     private Integer id;
     private Double amount;
     private String type;

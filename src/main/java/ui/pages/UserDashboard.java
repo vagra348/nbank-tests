@@ -2,7 +2,6 @@ package ui.pages;
 
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.Selectors;
-import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.SelenideElement;
 import common.utils.RetryUtils;
 import lombok.Getter;
@@ -40,6 +39,7 @@ public class UserDashboard extends BasePage<UserDashboard> {
     public WelcomeTitle getWelcomeTitle() {
         return generatePageElement(welcomeText, WelcomeTitle::new);
     }
+
     public String getUserNameInWelcomeText() {
         return RetryUtils.retry(
                 () -> getWelcomeTitle().getUserName(),

@@ -5,7 +5,7 @@ import org.assertj.core.api.AbstractAssert;
 
 public class DaoAndModelAssertions {
 
-    private static final DaoComparator daoComparator = new DaoComparator();
+    private static final DaoComparator DAO_COMPARATOR = new DaoComparator();
 
     public static DaoModelAssert assertThat(BaseModel apiModel, Object daoModel) {
         return new DaoModelAssert(apiModel, daoModel);
@@ -37,7 +37,7 @@ public class DaoAndModelAssertions {
             }
 
             try {
-                daoComparator.withEpsilon(epsilon).compare(apiModel, daoModel);
+                DAO_COMPARATOR.withEpsilon(epsilon).compare(apiModel, daoModel);
             } catch (AssertionError e) {
                 failWithMessage(e.getMessage());
             }

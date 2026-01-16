@@ -5,12 +5,13 @@ import lombok.Getter;
 @Getter
 public enum ErrorText {
     invalidAuthData("Invalid username or password"),
-    usernameExtraSymbolError ("Username must contain only letters, digits, dashes, underscores, and dots"),
-    blankUsernameError ("Username cannot be blank"),
-    blankPasswordError ("Password cannot be blank"),
-    roleValidationError ("Role must be either 'ADMIN' or 'USER'"),
-    passwordValidationError ("Password must contain at least one digit, one lower case, one upper case, one special character, no spaces, and be at least 8 characters long"),
-    usernameLengthError ("Username must be between 3 and 15 characters"),
+    usernameExtraSymbolError("Username must contain only letters, digits, dashes, underscores, and dots"),
+    blankUsernameError("Username cannot be blank"),
+    blankPasswordError("Password cannot be blank"),
+    roleValidationError("Role must be either 'ADMIN' or 'USER'"),
+    passwordValidationError("Password must contain at least one digit, one lower case, one upper case, one special "
+            + "character, no spaces, and be at least 8 characters long"),
+    usernameLengthError("Username must be between 3 and 15 characters"),
     invalidName("Name must contain two words with letters only"),
     invalidDepositAmount("Invalid account or amount"),
     hugeDepositAmountError("Deposit amount exceeds the 5000 limit"),

@@ -20,11 +20,11 @@ public class DataBaseSteps {
         TRANSACTIONS_ACC_ID("account_id"),
         TRANSACTIONS_RELATED_ACC_ID("related_account_id");
 
+        private String name;
+
         DBTables(String name) {
             this.name = name;
         }
-
-        private String name;
 
         public String getName() {
             return name;
