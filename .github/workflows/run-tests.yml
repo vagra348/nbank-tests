@@ -26,13 +26,18 @@ jobs:
       - name: Cache Maven repository
         uses: actions/cache@v4
         with:
-            path: ~/.m2/repository
-            key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
-            restore-keys: |
-              ${{ runner.os }}-maven-
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
 
       - name: Set up services
-        run: pwd && cd infra/docker_compose && pwd && bash ./restart-docker.sh && pwd && cd ../.. && pwd
+        run: |
+          pwd
+          cd infra/docker_compose && pwd
+          bash ./restart-docker.sh
+          cd ../..
+          pwd
 
       - name: Set permissions
         run: chmod +x mvnw
@@ -62,12 +67,18 @@ jobs:
         id: get-commit-hash
         run: |
           SHORT_HASH=$(git rev-parse --short HEAD)
-          echo "SHORT_HASH=$SHORT_HASH" >> $GITHUB_OUTPUT
+          echo "SHORT_HASH=$SHORT_HASH"
+          echo "short_hash=$SHORT_HASH" >> $GITHUB_OUTPUT
+
+      - name: Debug - Print commit hash
+        run: |
+          echo "Commit hash from step: ${{ steps.get-commit-hash.outputs.short_hash }}"
 
       - name: Run push script with commit hash
         run: |
           chmod +x push-tests.sh
-          ./push-tests.sh ${{ steps.get-commit-hash.outputs.SHORT_HASH }}
+          echo "Using commit hash: ${{ steps.get-commit-hash.outputs.short_hash }}"
+          ./push-tests.sh "${{ steps.get-commit-hash.outputs.short_hash }}"
         env:
           DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
           DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}

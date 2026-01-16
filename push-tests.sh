@@ -1,7 +1,7 @@
 #!/bin/bash
 
 IMAGE_NAME=nbank-tests
-DOCKERHUB_USERNAME=vagra348
+DOCKERHUB_USERNAME=${DOCKERHUB_USERNAME:-vagra348}
 TAG=${1:-latest}
 
 if [ -z "$DOCKERHUB_TOKEN" ]; then
@@ -14,13 +14,13 @@ echo ">>> Building project..."
 ./mvnw clean package -DskipTests
 
 echo ">>> Building Docker image..."
-docker build -t $IMAGE_NAME:$TAG
+docker build -t $IMAGE_NAME:$TAG .
 
 echo ">>> Login to Docker Hub with token"
 echo $DOCKERHUB_TOKEN | docker login --username $DOCKERHUB_USERNAME --password-stdin
 
 echo ">>> Tagging Image"
-docker tag $IMAGE_NAME $DOCKERHUB_USERNAME/$IMAGE_NAME:$TAG
+docker tag $IMAGE_NAME:$TAG $DOCKERHUB_USERNAME/$IMAGE_NAME:$TAG
 
 echo ">>> Sending Image to Docker Hub"
 docker push $DOCKERHUB_USERNAME/$IMAGE_NAME:$TAG
