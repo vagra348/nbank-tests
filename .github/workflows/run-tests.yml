@@ -1,6 +1,13 @@
 name: Run tests
 
-on: [ push, workflow_dispatch ]
+on:
+  push:
+    paths:
+      - 'src/**'
+      - 'pom.xml'
+      - 'checkstyle.xml'
+      - '.github/workflows/run-tests.yml'
+  workflow_dispatch:
 
 jobs:
   setup-and-run-tests:
@@ -35,3 +42,6 @@ jobs:
         env:
           APIBASEURI: http://localhost:4111
           UIBASEURL: http://frontend
+
+      - name: Run Checkstyle
+        run: ./mvnw checkstyle:check
