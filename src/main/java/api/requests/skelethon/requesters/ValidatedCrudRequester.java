@@ -11,9 +11,12 @@ import io.restassured.specification.ResponseSpecification;
 import java.util.Arrays;
 import java.util.List;
 
-public class ValidatedCrudRequester<T extends BaseModel> extends HttpRequest implements CrudEndpointInterface, GetAllEndpoindInterface {
+public class ValidatedCrudRequester<T extends BaseModel> extends HttpRequest
+        implements CrudEndpointInterface, GetAllEndpoindInterface {
     private  CrudRequester crudRequester;
-    public ValidatedCrudRequester(RequestSpecification requestSpecification, Endpoint endpoint, ResponseSpecification responseSpecification) {
+
+    public ValidatedCrudRequester(RequestSpecification requestSpecification, Endpoint endpoint,
+                                  ResponseSpecification responseSpecification) {
         super(requestSpecification, endpoint, responseSpecification);
         this.crudRequester = new CrudRequester(requestSpecification, endpoint, responseSpecification);
     }

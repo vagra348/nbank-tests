@@ -4,8 +4,6 @@ import api.configs.Config;
 import api.models.LoginUserRequest;
 import api.requests.skelethon.Endpoint;
 import api.requests.skelethon.requesters.CrudRequester;
-import com.github.viclovsky.swagger.coverage.SwaggerCoverageRestAssured;
-import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;

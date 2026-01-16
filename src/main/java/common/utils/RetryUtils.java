@@ -1,9 +1,7 @@
 package common.utils;
 
-
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-
 
 public class RetryUtils {
 
@@ -26,7 +24,8 @@ public class RetryUtils {
         throw new RuntimeException("Retry failed after " + maxAttempts + " attempts!");
     }
 
-    public static void retryVoidWithCheck(Runnable action, Supplier<Boolean> condition, int maxAttempts, long delayMillis) {
+    public static void retryVoidWithCheck(Runnable action, Supplier<Boolean> condition,
+                                          int maxAttempts, long delayMillis) {
         int attempts = 0;
         while (attempts < maxAttempts) {
             attempts++;
