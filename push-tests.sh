@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 IMAGE_NAME=nbank-tests
 DOCKERHUB_USERNAME=${DOCKERHUB_USERNAME:-vagra348}
