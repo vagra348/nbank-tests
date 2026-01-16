@@ -35,6 +35,6 @@ if [ "$PERCENTAGE" -lt "$MIN_COVERAGE" ]; then
     echo "FAIL: API coverage ($PERCENTAGE%) < ($MIN_COVERAGE%)"
     exit 1
 else
-    echo "✅ SUCCESS: API coverage ($PERCENTAGE%) meets the requirements"
+    echo "SUCCESS: API coverage ($PERCENTAGE%) meets the requirements"
     exit 0
 fi
