@@ -23,7 +23,7 @@ public class UserDashboard extends BasePage<UserDashboard> {
     private SelenideElement userNameProfile = $(Selectors.byXpath("//*[@class='user-name']"));
 
     public UserDashboard createNewAccount(String alertName) {
-        RetryUtils.retryVoidWithCheck(
+        RetryUtils.retryVoidWithCheck("Create new account",
                 () -> {
                     createAccBtn.shouldBe(Condition.visible);
                     createAccBtn.click();
@@ -41,7 +41,7 @@ public class UserDashboard extends BasePage<UserDashboard> {
     }
 
     public String getUserNameInWelcomeText() {
-        return RetryUtils.retry(
+        return RetryUtils.retry("Get username in welcome-text",
                 () -> getWelcomeTitle().getUserName(),
                 result -> !Objects.equals(getWelcomeTitle().getUserName(), "noname"),
                 7,

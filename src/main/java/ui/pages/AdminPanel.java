@@ -32,7 +32,7 @@ public class AdminPanel extends BasePage<AdminPanel> {
     }
 
     public UserBadge findUserByUsername(String username) {
-        return RetryUtils.retry(
+        return RetryUtils.retry("Find user by username " + username,
                 () -> getAllUsers().stream().filter(it -> it.getUsername().equals(username)).findAny().orElse(null),
                 result -> result != null,
                 3,
