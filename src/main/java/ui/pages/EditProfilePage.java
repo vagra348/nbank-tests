@@ -16,7 +16,7 @@ public class EditProfilePage extends BasePage<EditProfilePage> {
     private SelenideElement saveChangesBtn = $(Selectors.byXpath("//button[contains(text(),'Save Changes')]"));
 
     public EditProfilePage changeName(String name, String alertName) {
-        RetryUtils.retryVoidWithCheck("Change name",
+        RetryUtils.retryVoidWithCheck(
                 () -> {
                     editProfileBtn.shouldBe(Condition.visible);
                     nameInput.sendKeys(name);

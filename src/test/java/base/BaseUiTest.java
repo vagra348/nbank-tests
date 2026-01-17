@@ -4,7 +4,10 @@ import api.configs.Config;
 import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.logevents.SelenideLogger;
-import common.extensions.*;
+import common.extensions.AdminSessionExtension;
+import common.extensions.BrowserMatcExtension;
+import common.extensions.TimingExtension;
+import common.extensions.UserSessionExtension;
 import io.qameta.allure.selenide.AllureSelenide;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -18,7 +21,6 @@ import static com.codeborne.selenide.Configuration.timeout;
 @ExtendWith(TimingExtension.class)
 @ExtendWith(AdminSessionExtension.class)
 @ExtendWith(UserSessionExtension.class)
-@ExtendWith(AllureFailureAttachments.class)
 public class BaseUiTest extends BaseTest {
     @BeforeAll
     public static void setupSelenoid() {

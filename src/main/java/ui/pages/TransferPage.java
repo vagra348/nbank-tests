@@ -5,7 +5,6 @@ import api.models.CreateUserRequest;
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.Selectors;
 import com.codeborne.selenide.SelenideElement;
-import common.helpers.StepLogger;
 import lombok.Getter;
 import ui.elements.Transaction;
 
@@ -29,13 +28,11 @@ public class TransferPage extends BasePage<TransferPage> {
             "//*[text()='Matching Transactions']/parent::*/ul/li/span"));
 
     public List<Transaction> getTransactionsElementsList() {
-        return StepLogger.log("Get all transactions", () -> {
-            ElementsCollection elements = $(Selectors.byText("Matching Transactions"))
-                    .parent()
-                    .find("ul")
-                    .findAll("li span");
-            return generatePageElements(elements, Transaction::new);
-        });
+        ElementsCollection elements = $(Selectors.byText("Matching Transactions"))
+                .parent()
+                .find("ul")
+                .findAll("li span");
+        return generatePageElements(elements, Transaction::new);
     }
 
     public TransferPage makeTransfer(CreateUserRequest user, AccountModel senAcc, AccountModel recAcc, Double sum) {
